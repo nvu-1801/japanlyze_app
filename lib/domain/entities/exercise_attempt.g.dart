@@ -15,7 +15,7 @@ extension GetExerciseAttemptCollection on Isar {
 
 const ExerciseAttemptSchema = CollectionSchema(
   name: r'ExerciseAttempt',
-  id: 5,
+  id: -6389160222360501103,
   properties: {
     r'createdAt': PropertySchema(
       id: 0,
@@ -32,14 +32,26 @@ const ExerciseAttemptSchema = CollectionSchema(
       name: r'mistakes',
       type: IsarType.longList,
     ),
-    r'score': PropertySchema(id: 3, name: r'score', type: IsarType.long),
+    r'score': PropertySchema(
+      id: 3,
+      name: r'score',
+      type: IsarType.long,
+    ),
     r'timeSpent': PropertySchema(
       id: 4,
       name: r'timeSpent',
       type: IsarType.long,
     ),
-    r'total': PropertySchema(id: 5, name: r'total', type: IsarType.long),
-    r'userId': PropertySchema(id: 6, name: r'userId', type: IsarType.long),
+    r'total': PropertySchema(
+      id: 5,
+      name: r'total',
+      type: IsarType.long,
+    ),
+    r'userId': PropertySchema(
+      id: 6,
+      name: r'userId',
+      type: IsarType.long,
+    )
   },
   estimateSize: _exerciseAttemptEstimateSize,
   serialize: _exerciseAttemptSerialize,
@@ -134,10 +146,7 @@ List<IsarLinkBase<dynamic>> _exerciseAttemptGetLinks(ExerciseAttempt object) {
 }
 
 void _exerciseAttemptAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  ExerciseAttempt object,
-) {
+    IsarCollection<dynamic> col, Id id, ExerciseAttempt object) {
   object.id = id;
 }
 
@@ -153,15 +162,17 @@ extension ExerciseAttemptQueryWhereSort
 extension ExerciseAttemptQueryWhere
     on QueryBuilder<ExerciseAttempt, ExerciseAttempt, QWhereClause> {
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterWhereClause> idEqualTo(
-    Id id,
-  ) {
+      Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterWhereClause>
-  idNotEqualTo(Id id) {
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -184,7 +195,7 @@ extension ExerciseAttemptQueryWhere
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterWhereClause>
-  idGreaterThan(Id id, {bool include = false}) {
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -193,9 +204,8 @@ extension ExerciseAttemptQueryWhere
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterWhereClause> idLessThan(
-    Id id, {
-    bool include = false,
-  }) {
+      Id id,
+      {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -210,14 +220,12 @@ extension ExerciseAttemptQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -225,262 +233,302 @@ extension ExerciseAttemptQueryWhere
 extension ExerciseAttemptQueryFilter
     on QueryBuilder<ExerciseAttempt, ExerciseAttempt, QFilterCondition> {
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  createdAtEqualTo(DateTime value) {
+      createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'createdAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  createdAtGreaterThan(DateTime value, {bool include = false}) {
+      createdAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  createdAtLessThan(DateTime value, {bool include = false}) {
+      createdAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  createdAtBetween(
+      createdAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'createdAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'createdAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  exerciseIdEqualTo(int value) {
+      exerciseIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'exerciseId', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'exerciseId',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  exerciseIdGreaterThan(int value, {bool include = false}) {
+      exerciseIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'exerciseId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'exerciseId',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  exerciseIdLessThan(int value, {bool include = false}) {
+      exerciseIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'exerciseId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'exerciseId',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  exerciseIdBetween(
+      exerciseIdBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'exerciseId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'exerciseId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  idEqualTo(Id value) {
+      idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  idGreaterThan(Id value, {bool include = false}) {
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  idLessThan(Id value, {bool include = false}) {
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  idBetween(
+      idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesElementEqualTo(int value) {
+      mistakesElementEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'mistakes', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'mistakes',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesElementGreaterThan(int value, {bool include = false}) {
+      mistakesElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'mistakes',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'mistakes',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesElementLessThan(int value, {bool include = false}) {
+      mistakesElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'mistakes',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'mistakes',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesElementBetween(
+      mistakesElementBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'mistakes',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'mistakes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
+      mistakesLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'mistakes',
+        length,
+        true,
+        length,
+        true,
       );
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesLengthEqualTo(int length) {
+      mistakesIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'mistakes', length, true, length, true);
+      return query.listLength(
+        r'mistakes',
+        0,
+        true,
+        0,
+        true,
+      );
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesIsEmpty() {
+      mistakesIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'mistakes', 0, true, 0, true);
+      return query.listLength(
+        r'mistakes',
+        0,
+        false,
+        999999,
+        true,
+      );
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesIsNotEmpty() {
+      mistakesLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'mistakes', 0, false, 999999, true);
+      return query.listLength(
+        r'mistakes',
+        0,
+        true,
+        length,
+        include,
+      );
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesLengthLessThan(int length, {bool include = false}) {
+      mistakesLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'mistakes', 0, true, length, include);
+      return query.listLength(
+        r'mistakes',
+        length,
+        include,
+        999999,
+        true,
+      );
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesLengthGreaterThan(int length, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(r'mistakes', length, include, 999999, true);
-    });
-  }
-
-  QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  mistakesLengthBetween(
+      mistakesLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -498,222 +546,226 @@ extension ExerciseAttemptQueryFilter
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  scoreEqualTo(int value) {
+      scoreEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'score', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'score',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  scoreGreaterThan(int value, {bool include = false}) {
+      scoreGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'score',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'score',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  scoreLessThan(int value, {bool include = false}) {
+      scoreLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'score',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'score',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  scoreBetween(
+      scoreBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'score',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'score',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  timeSpentEqualTo(int value) {
+      timeSpentEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'timeSpent', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'timeSpent',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  timeSpentGreaterThan(int value, {bool include = false}) {
+      timeSpentGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'timeSpent',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'timeSpent',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  timeSpentLessThan(int value, {bool include = false}) {
+      timeSpentLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'timeSpent',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'timeSpent',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  timeSpentBetween(
+      timeSpentBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'timeSpent',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'timeSpent',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  totalEqualTo(int value) {
+      totalEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'total', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'total',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  totalGreaterThan(int value, {bool include = false}) {
+      totalGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'total',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'total',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  totalLessThan(int value, {bool include = false}) {
+      totalLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'total',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'total',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  totalBetween(
+      totalBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'total',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'total',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  userIdEqualTo(int value) {
+      userIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'userId', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userId',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  userIdGreaterThan(int value, {bool include = false}) {
+      userIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'userId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'userId',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  userIdLessThan(int value, {bool include = false}) {
+      userIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'userId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'userId',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterFilterCondition>
-  userIdBetween(
+      userIdBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'userId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'userId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -727,28 +779,28 @@ extension ExerciseAttemptQueryLinks
 extension ExerciseAttemptQuerySortBy
     on QueryBuilder<ExerciseAttempt, ExerciseAttempt, QSortBy> {
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  sortByCreatedAt() {
+      sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  sortByCreatedAtDesc() {
+      sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  sortByExerciseId() {
+      sortByExerciseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'exerciseId', Sort.asc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  sortByExerciseIdDesc() {
+      sortByExerciseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'exerciseId', Sort.desc);
     });
@@ -761,21 +813,21 @@ extension ExerciseAttemptQuerySortBy
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  sortByScoreDesc() {
+      sortByScoreDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'score', Sort.desc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  sortByTimeSpent() {
+      sortByTimeSpent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timeSpent', Sort.asc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  sortByTimeSpentDesc() {
+      sortByTimeSpentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timeSpent', Sort.desc);
     });
@@ -788,7 +840,7 @@ extension ExerciseAttemptQuerySortBy
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  sortByTotalDesc() {
+      sortByTotalDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'total', Sort.desc);
     });
@@ -801,7 +853,7 @@ extension ExerciseAttemptQuerySortBy
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  sortByUserIdDesc() {
+      sortByUserIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'userId', Sort.desc);
     });
@@ -811,28 +863,28 @@ extension ExerciseAttemptQuerySortBy
 extension ExerciseAttemptQuerySortThenBy
     on QueryBuilder<ExerciseAttempt, ExerciseAttempt, QSortThenBy> {
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  thenByCreatedAt() {
+      thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  thenByCreatedAtDesc() {
+      thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  thenByExerciseId() {
+      thenByExerciseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'exerciseId', Sort.asc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  thenByExerciseIdDesc() {
+      thenByExerciseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'exerciseId', Sort.desc);
     });
@@ -857,21 +909,21 @@ extension ExerciseAttemptQuerySortThenBy
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  thenByScoreDesc() {
+      thenByScoreDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'score', Sort.desc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  thenByTimeSpent() {
+      thenByTimeSpent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timeSpent', Sort.asc);
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  thenByTimeSpentDesc() {
+      thenByTimeSpentDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timeSpent', Sort.desc);
     });
@@ -884,7 +936,7 @@ extension ExerciseAttemptQuerySortThenBy
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  thenByTotalDesc() {
+      thenByTotalDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'total', Sort.desc);
     });
@@ -897,7 +949,7 @@ extension ExerciseAttemptQuerySortThenBy
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QAfterSortBy>
-  thenByUserIdDesc() {
+      thenByUserIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'userId', Sort.desc);
     });
@@ -907,21 +959,21 @@ extension ExerciseAttemptQuerySortThenBy
 extension ExerciseAttemptQueryWhereDistinct
     on QueryBuilder<ExerciseAttempt, ExerciseAttempt, QDistinct> {
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QDistinct>
-  distinctByCreatedAt() {
+      distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QDistinct>
-  distinctByExerciseId() {
+      distinctByExerciseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'exerciseId');
     });
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QDistinct>
-  distinctByMistakes() {
+      distinctByMistakes() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'mistakes');
     });
@@ -934,7 +986,7 @@ extension ExerciseAttemptQueryWhereDistinct
   }
 
   QueryBuilder<ExerciseAttempt, ExerciseAttempt, QDistinct>
-  distinctByTimeSpent() {
+      distinctByTimeSpent() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'timeSpent');
     });
@@ -962,7 +1014,7 @@ extension ExerciseAttemptQueryProperty
   }
 
   QueryBuilder<ExerciseAttempt, DateTime, QQueryOperations>
-  createdAtProperty() {
+      createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
     });
@@ -975,7 +1027,7 @@ extension ExerciseAttemptQueryProperty
   }
 
   QueryBuilder<ExerciseAttempt, List<int>, QQueryOperations>
-  mistakesProperty() {
+      mistakesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'mistakes');
     });

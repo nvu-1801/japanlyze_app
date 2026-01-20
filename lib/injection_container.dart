@@ -2,8 +2,9 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'core/network/dio_client.dart';
+
 import 'data/datasources/local/user_local_datasource.dart';
 import 'data/datasources/remote/auth_remote_datasource.dart';
 import 'data/repositories/auth_repository_impl.dart';
@@ -30,11 +31,11 @@ Future<void> init() async {
   sl.registerLazySingleton(() => connectivity);
 
   //=== Core ===//
-  sl.registerLazySingleton(() => DioClient(secureStorage: sl()));
+  sl.registerLazySingleton(() => Supabase.instance.client);
 
   //=== Data Sources ===//
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(dio: sl<DioClient>().dio),
+    () => AuthRemoteDataSourceImpl(supabase: sl<SupabaseClient>()),
   );
   sl.registerLazySingleton<UserLocalDataSource>(
     () => UserLocalDataSourceImpl(secureStorage: sl(), sharedPreferences: sl()),

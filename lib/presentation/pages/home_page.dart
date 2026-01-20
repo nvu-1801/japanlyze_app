@@ -261,6 +261,7 @@ class _DashboardTabState extends State<_DashboardTab>
                   streakCount: 7,
                   exp: 1250,
                   level: 5,
+                  uuid: '',
                 );
 
           return CustomScrollView(
@@ -1476,6 +1477,7 @@ class _ProfileTab extends StatelessWidget {
                   streakCount: 7,
                   exp: 1250,
                   level: 5,
+                  uuid: '',
                 );
 
           return CustomScrollView(

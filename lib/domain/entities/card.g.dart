@@ -15,10 +15,18 @@ extension GetCardCollection on Isar {
 
 const CardSchema = CollectionSchema(
   name: r'Card',
-  id: 3,
+  id: 2706062385186124215,
   properties: {
-    r'back': PropertySchema(id: 0, name: r'back', type: IsarType.string),
-    r'deckId': PropertySchema(id: 1, name: r'deckId', type: IsarType.long),
+    r'back': PropertySchema(
+      id: 0,
+      name: r'back',
+      type: IsarType.string,
+    ),
+    r'deckId': PropertySchema(
+      id: 1,
+      name: r'deckId',
+      type: IsarType.long,
+    ),
     r'dueDate': PropertySchema(
       id: 2,
       name: r'dueDate',
@@ -29,9 +37,21 @@ const CardSchema = CollectionSchema(
       name: r'easeFactor',
       type: IsarType.double,
     ),
-    r'example': PropertySchema(id: 4, name: r'example', type: IsarType.string),
-    r'front': PropertySchema(id: 5, name: r'front', type: IsarType.string),
-    r'interval': PropertySchema(id: 6, name: r'interval', type: IsarType.long),
+    r'example': PropertySchema(
+      id: 4,
+      name: r'example',
+      type: IsarType.string,
+    ),
+    r'front': PropertySchema(
+      id: 5,
+      name: r'front',
+      type: IsarType.string,
+    ),
+    r'interval': PropertySchema(
+      id: 6,
+      name: r'interval',
+      type: IsarType.long,
+    ),
     r'isLearned': PropertySchema(
       id: 7,
       name: r'isLearned',
@@ -46,7 +66,7 @@ const CardSchema = CollectionSchema(
       id: 9,
       name: r'repetitions',
       type: IsarType.long,
-    ),
+    )
   },
   estimateSize: _cardEstimateSize,
   serialize: _cardSerialize,
@@ -174,7 +194,10 @@ extension CardQueryWhereSort on QueryBuilder<Card, Card, QWhere> {
 extension CardQueryWhere on QueryBuilder<Card, Card, QWhereClause> {
   QueryBuilder<Card, Card, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
@@ -200,10 +223,8 @@ extension CardQueryWhere on QueryBuilder<Card, Card, QWhereClause> {
     });
   }
 
-  QueryBuilder<Card, Card, QAfterWhereClause> idGreaterThan(
-    Id id, {
-    bool include = false,
-  }) {
+  QueryBuilder<Card, Card, QAfterWhereClause> idGreaterThan(Id id,
+      {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -211,10 +232,8 @@ extension CardQueryWhere on QueryBuilder<Card, Card, QWhereClause> {
     });
   }
 
-  QueryBuilder<Card, Card, QAfterWhereClause> idLessThan(
-    Id id, {
-    bool include = false,
-  }) {
+  QueryBuilder<Card, Card, QAfterWhereClause> idLessThan(Id id,
+      {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -229,14 +248,12 @@ extension CardQueryWhere on QueryBuilder<Card, Card, QWhereClause> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -247,13 +264,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'back',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'back',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -263,14 +278,12 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'back',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'back',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -280,14 +293,12 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'back',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'back',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -299,16 +310,14 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'back',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'back',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -317,13 +326,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'back',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'back',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -332,67 +339,60 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'back',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'back',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<Card, Card, QAfterFilterCondition> backContains(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Card, Card, QAfterFilterCondition> backContains(String value,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'back',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'back',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<Card, Card, QAfterFilterCondition> backMatches(
-    String pattern, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Card, Card, QAfterFilterCondition> backMatches(String pattern,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'back',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'back',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> backIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'back', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'back',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> backIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'back', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'back',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> deckIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'deckId', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'deckId',
+        value: value,
+      ));
     });
   }
 
@@ -401,13 +401,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'deckId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'deckId',
+        value: value,
+      ));
     });
   }
 
@@ -416,13 +414,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'deckId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'deckId',
+        value: value,
+      ));
     });
   }
 
@@ -433,41 +429,39 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'deckId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'deckId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> dueDateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'dueDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'dueDate',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> dueDateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'dueDate'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'dueDate',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> dueDateEqualTo(
-    DateTime? value,
-  ) {
+      DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'dueDate', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dueDate',
+        value: value,
+      ));
     });
   }
 
@@ -476,13 +470,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'dueDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dueDate',
+        value: value,
+      ));
     });
   }
 
@@ -491,13 +483,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'dueDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dueDate',
+        value: value,
+      ));
     });
   }
 
@@ -508,15 +498,13 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'dueDate',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dueDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
@@ -525,13 +513,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'easeFactor',
-          value: value,
-          epsilon: epsilon,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'easeFactor',
+        value: value,
+        epsilon: epsilon,
+      ));
     });
   }
 
@@ -541,14 +527,12 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'easeFactor',
-          value: value,
-          epsilon: epsilon,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'easeFactor',
+        value: value,
+        epsilon: epsilon,
+      ));
     });
   }
 
@@ -558,14 +542,12 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'easeFactor',
-          value: value,
-          epsilon: epsilon,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'easeFactor',
+        value: value,
+        epsilon: epsilon,
+      ));
     });
   }
 
@@ -577,32 +559,30 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'easeFactor',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          epsilon: epsilon,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'easeFactor',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> exampleIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'example'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'example',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> exampleIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'example'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'example',
+      ));
     });
   }
 
@@ -611,13 +591,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'example',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'example',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -627,14 +605,12 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'example',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'example',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -644,14 +620,12 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'example',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'example',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -663,16 +637,14 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'example',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'example',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -681,13 +653,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'example',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'example',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -696,59 +666,51 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'example',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'example',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<Card, Card, QAfterFilterCondition> exampleContains(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Card, Card, QAfterFilterCondition> exampleContains(String value,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'example',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'example',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<Card, Card, QAfterFilterCondition> exampleMatches(
-    String pattern, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Card, Card, QAfterFilterCondition> exampleMatches(String pattern,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'example',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'example',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> exampleIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'example', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'example',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> exampleIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'example', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'example',
+        value: '',
+      ));
     });
   }
 
@@ -757,13 +719,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'front',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'front',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -773,14 +733,12 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'front',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'front',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -790,14 +748,12 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'front',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'front',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -809,16 +765,14 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'front',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'front',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -827,13 +781,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'front',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'front',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
@@ -842,67 +794,60 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'front',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'front',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<Card, Card, QAfterFilterCondition> frontContains(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Card, Card, QAfterFilterCondition> frontContains(String value,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'front',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'front',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<Card, Card, QAfterFilterCondition> frontMatches(
-    String pattern, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Card, Card, QAfterFilterCondition> frontMatches(String pattern,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'front',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'front',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> frontIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'front', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'front',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> frontIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'front', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'front',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
@@ -911,13 +856,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
@@ -926,13 +869,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
@@ -943,23 +884,22 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> intervalEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'interval', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'interval',
+        value: value,
+      ));
     });
   }
 
@@ -968,13 +908,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'interval',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'interval',
+        value: value,
+      ));
     });
   }
 
@@ -983,13 +921,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'interval',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'interval',
+        value: value,
+      ));
     });
   }
 
@@ -1000,49 +936,48 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'interval',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'interval',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> isLearnedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'isLearned', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isLearned',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> lastReviewedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'lastReviewedAt'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastReviewedAt',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> lastReviewedAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'lastReviewedAt'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastReviewedAt',
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> lastReviewedAtEqualTo(
-    DateTime? value,
-  ) {
+      DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'lastReviewedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastReviewedAt',
+        value: value,
+      ));
     });
   }
 
@@ -1051,13 +986,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'lastReviewedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastReviewedAt',
+        value: value,
+      ));
     });
   }
 
@@ -1066,13 +999,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'lastReviewedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastReviewedAt',
+        value: value,
+      ));
     });
   }
 
@@ -1083,25 +1014,23 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'lastReviewedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastReviewedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<Card, Card, QAfterFilterCondition> repetitionsEqualTo(
-    int value,
-  ) {
+      int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'repetitions', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'repetitions',
+        value: value,
+      ));
     });
   }
 
@@ -1110,13 +1039,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'repetitions',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'repetitions',
+        value: value,
+      ));
     });
   }
 
@@ -1125,13 +1052,11 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'repetitions',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'repetitions',
+        value: value,
+      ));
     });
   }
 
@@ -1142,15 +1067,13 @@ extension CardQueryFilter on QueryBuilder<Card, Card, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'repetitions',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'repetitions',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -1416,9 +1339,8 @@ extension CardQuerySortThenBy on QueryBuilder<Card, Card, QSortThenBy> {
 }
 
 extension CardQueryWhereDistinct on QueryBuilder<Card, Card, QDistinct> {
-  QueryBuilder<Card, Card, QDistinct> distinctByBack({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Card, Card, QDistinct> distinctByBack(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'back', caseSensitive: caseSensitive);
     });
@@ -1442,17 +1364,15 @@ extension CardQueryWhereDistinct on QueryBuilder<Card, Card, QDistinct> {
     });
   }
 
-  QueryBuilder<Card, Card, QDistinct> distinctByExample({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Card, Card, QDistinct> distinctByExample(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'example', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Card, Card, QDistinct> distinctByFront({
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Card, Card, QDistinct> distinctByFront(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'front', caseSensitive: caseSensitive);
     });
