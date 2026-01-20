@@ -28,12 +28,14 @@ class FlashcardSet {
   final String title;
   final List<Flashcard> cards;
   final int masteredCount; // Optional: track progress if manageable
+  final int studiedCount;
 
   FlashcardSet({
     required this.id,
     required this.title,
     required this.cards,
     this.masteredCount = 0,
+    this.studiedCount = 0,
   });
 
   Map<String, dynamic> toJson() => {
@@ -41,6 +43,7 @@ class FlashcardSet {
     'title': title,
     'cards': cards.map((c) => c.toJson()).toList(),
     'masteredCount': masteredCount,
+    'studiedCount': studiedCount,
   };
 
   factory FlashcardSet.fromJson(Map<String, dynamic> json) => FlashcardSet(
@@ -48,5 +51,6 @@ class FlashcardSet {
     title: json['title'],
     cards: (json['cards'] as List).map((c) => Flashcard.fromJson(c)).toList(),
     masteredCount: json['masteredCount'] ?? 0,
+    studiedCount: json['studiedCount'] ?? 0,
   );
 }

@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import '../../../../infrastructure/repositories/flashcard_repository.dart';
 import '../../../../domain/entities/flashcard_models.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'dart:math' as math;
@@ -44,62 +45,87 @@ class _StudyFlashcardPageState extends State<StudyFlashcardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.flashcardSet.title),
-        elevation: 0,
-         backgroundColor: Colors.transparent,
-         foregroundColor: Colors.black,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: LinearProgressIndicator(
-              value: (_currentIndex + 1) / widget.flashcardSet.cards.length,
-              backgroundColor: Colors.grey[200],
-              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        
+        // Save progress
+        final currentProgress = widget.flashcardSet.studiedCount;
+        final newProgress = math.max(currentProgress, _currentIndex + 1);
+        
+        if (newProgress > currentProgress) {
+           final updatedSet = FlashcardSet(
+            id: widget.flashcardSet.id,
+            title: widget.flashcardSet.title,
+            cards: widget.flashcardSet.cards,
+            masteredCount: widget.flashcardSet.masteredCount,
+            studiedCount: newProgress,
+          );
+          await FlashcardRepository().saveFlashcardSet(updatedSet);
+        }
+
+        if (context.mounted) {
+          Navigator.pop(context, true); // Return true to trigger reload
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.flashcardSet.title),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.black,
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: LinearProgressIndicator(
+                value: (_currentIndex + 1) / widget.flashcardSet.cards.length,
+                backgroundColor: Colors.grey[200],
+                valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+              ),
             ),
-          ),
-          Text(
-            '${_currentIndex + 1} / ${widget.flashcardSet.cards.length}',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: widget.flashcardSet.cards.length,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                  _showFront = true; // Reset flight on swipe
-                });
-              },
-              itemBuilder: (context, index) {
-               return Padding(
-                 padding: const EdgeInsets.all(24.0),
-                 child: _buildFlipCard(widget.flashcardSet.cards[index]),
-               );
-              },
+            Text(
+              '${_currentIndex + 1} / ${widget.flashcardSet.cards.length}',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  onPressed: _currentIndex > 0 ? _prevCard : null,
-                  icon: const Icon(Icons.arrow_back_ios, size: 32),
-                ),
-                IconButton(
-                   onPressed: _currentIndex < widget.flashcardSet.cards.length - 1 ? _nextCard : null,
-                  icon: const Icon(Icons.arrow_forward_ios, size: 32),
-                ),
-              ],
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: widget.flashcardSet.cards.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                    _showFront = true; // Reset flip on swipe
+                  });
+                },
+                itemBuilder: (context, index) {
+                 return Padding(
+                   padding: const EdgeInsets.all(24.0),
+                   child: _buildFlipCard(widget.flashcardSet.cards[index]),
+                 );
+                },
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    onPressed: _currentIndex > 0 ? _prevCard : null,
+                    icon: const Icon(Icons.arrow_back_ios, size: 32),
+                  ),
+                  IconButton(
+                     onPressed: _currentIndex < widget.flashcardSet.cards.length - 1 ? _nextCard : null,
+                    icon: const Icon(Icons.arrow_forward_ios, size: 32),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

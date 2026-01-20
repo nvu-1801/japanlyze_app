@@ -17,6 +17,8 @@ class FlashcardsTab extends StatefulWidget {
 class _FlashcardsTabState extends State<FlashcardsTab> {
   List<FlashcardSet> _flashcardSets = [];
   bool _isLoading = true;
+  bool _isSelectionMode = false;
+  final Set<String> _selectedSetIds = {};
 
   @override
   void initState() {
@@ -39,6 +41,48 @@ class _FlashcardsTabState extends State<FlashcardsTab> {
       MaterialPageRoute(builder: (context) => const CreateFlashcardSetPage()),
     );
     if (result == true) {
+      _loadSets();
+    }
+  }
+
+  void _toggleSelectionMode() {
+    setState(() {
+      _isSelectionMode = !_isSelectionMode;
+      _selectedSetIds.clear();
+    });
+  }
+
+  void _toggleSetSelection(String id) {
+    setState(() {
+      if (_selectedSetIds.contains(id)) {
+        _selectedSetIds.remove(id);
+      } else {
+        _selectedSetIds.add(id);
+      }
+    });
+  }
+
+  Future<void> _deleteSelectedSets() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Selected Sets?'),
+        content: Text('Delete ${_selectedSetIds.length} sets? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      for (final id in _selectedSetIds) {
+        await FlashcardRepository().deleteFlashcardSet(id);
+      }
+      _toggleSelectionMode(); // Exit selection mode
       _loadSets();
     }
   }
@@ -82,7 +126,22 @@ class _FlashcardsTabState extends State<FlashcardsTab> {
               ),
             ),
             actions: [
-              IconButton(icon: const Icon(Icons.add_rounded), onPressed: _createSet),
+              if (_isSelectionMode) ...[
+                TextButton(
+                  onPressed: _toggleSelectionMode,
+                  child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: _selectedSetIds.isEmpty ? null : _deleteSelectedSets,
+                ),
+              ] else ...[
+                 TextButton(
+                  onPressed: _toggleSelectionMode,
+                  child: const Text('Select', style: TextStyle(fontSize: 16)),
+                ),
+                IconButton(icon: const Icon(Icons.add_rounded), onPressed: _createSet),
+              ],
             ],
           ),
           if (_isLoading)
@@ -113,15 +172,30 @@ class _FlashcardsTabState extends State<FlashcardsTab> {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final set = _flashcardSets[index];
+                    final isSelected = _selectedSetIds.contains(set.id);
                     return _DeckCard(
                       set: set,
+                      isSelectionMode: _isSelectionMode,
+                      isSelected: isSelected,
+                      onSelectionChanged: (value) => _toggleSetSelection(set.id),
                       onTap: () {
-                         Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => StudyFlashcardPage(flashcardSet: set)),
-                        );
+                        if (_isSelectionMode) {
+                           _toggleSetSelection(set.id);
+                        } else {
+                           Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => StudyFlashcardPage(flashcardSet: set)),
+                          ).then((result) {
+                             if (result == true) _loadSets();
+                          });
+                        }
                       },
-                      onLongPress: () => _deleteSet(set.id),
+                      onLongPress: () {
+                         if (!_isSelectionMode) {
+                            _toggleSelectionMode();
+                            _toggleSetSelection(set.id);
+                         }
+                      },
                     );
                   },
                   childCount: _flashcardSets.length,
@@ -137,10 +211,20 @@ class _FlashcardsTabState extends State<FlashcardsTab> {
 
 class _DeckCard extends StatefulWidget {
   final FlashcardSet set;
+  final bool isSelectionMode;
+  final bool isSelected;
+  final ValueChanged<bool?>? onSelectionChanged;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
-  const _DeckCard({required this.set, required this.onTap, required this.onLongPress});
+  const _DeckCard({
+    required this.set,
+    required this.isSelectionMode,
+    required this.isSelected,
+    this.onSelectionChanged,
+    required this.onTap,
+    required this.onLongPress,
+  });
 
   @override
   State<_DeckCard> createState() => _DeckCardState();
@@ -185,6 +269,9 @@ class _DeckCardState extends State<_DeckCard> {
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(20),
+            border: widget.isSelected
+                ? Border.all(color: AppColors.primary, width: 2)
+                : null,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
@@ -193,43 +280,92 @@ class _DeckCardState extends State<_DeckCard> {
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(Icons.style_rounded, color: color, size: 30),
+              Row(
+                children: [
+                   if (widget.isSelectionMode) ...[
+                      Checkbox(
+                        value: widget.isSelected,
+                        onChanged: widget.onSelectionChanged,
+                        activeColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      ),
+                      const SizedBox(width: 8),
+                   ],
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(Icons.style_rounded, color: color, size: 30),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.set.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${widget.set.cards.length} cards',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  if (!widget.isSelectionMode)
+                   Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Colors.grey[400],
+                    size: 16,
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              if (widget.set.cards.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      widget.set.title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                      'Learning Progress',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
-                      '${widget.set.cards.length} cards',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      '${(widget.set.studiedCount / widget.set.cards.length * 100).toInt()}%',
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 12),
-               Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Colors.grey[400],
-                size: 16,
-              ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: widget.set.studiedCount / widget.set.cards.length,
+                    backgroundColor: color.withOpacity(0.1),
+                    valueColor: AlwaysStoppedAnimation(color),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
