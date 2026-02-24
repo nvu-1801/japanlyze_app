@@ -218,6 +218,7 @@ class _ExercisesTabState extends State<ExercisesTab> {
                           lesson: lesson,
                           isLocked: lockStatus.isLocked,
                           isCompleted: isCompleted,
+                          progress: isCompleted ? 1.0 : 0.0,
                           onTap: () {
                             if (lockStatus.isLocked) {
                               _handleLockedTap(lockStatus.missingTitles);

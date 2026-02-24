@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:math' as math;
@@ -6,6 +6,11 @@ import 'dart:math' as math;
 import '../../../../core/constants/app_colors.dart';
 import '../../../../domain/entities/user.dart';
 import '../../../blocs/auth/auth_bloc.dart';
+import '../../../../infrastructure/repositories/flashcard_repository.dart';
+import '../../../../infrastructure/repositories/user_progress_service.dart';
+import '../../../../infrastructure/datasources/local/conversation_data.dart';
+import '../../../../domain/entities/conversation_models.dart';
+import '../../../../domain/entities/flashcard_models.dart';
 
 /// Dashboard tab with modern design
 class DashboardTab extends StatefulWidget {
@@ -20,6 +25,17 @@ class _DashboardTabState extends State<DashboardTab>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  // Progress State
+  int _flashcardsStudied = 0;
+  int _flashcardsTotal = 0;
+  int _vocabCompleted = 0;
+  int _vocabTotal = 0;
+  int _conversationCompleted = 0;
+  int _conversationTotal = 0;
+  double _overallProgress = 0.0;
+  bool _isLoadingProgress = true;
+  List<FlashcardSet> _flashcardSets = [];
 
   @override
   void initState() {
@@ -37,6 +53,72 @@ class _DashboardTabState extends State<DashboardTab>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
+    
+    _loadProgressData();
+  }
+
+  Future<void> _loadProgressData() async {
+    // 1. Load Flashcards Progress
+    final sets = await FlashcardRepository().getFlashcardSets();
+    int fcStudied = 0;
+    int fcTotal = 0;
+    for (var set in sets) {
+      fcStudied += set.studiedCount;
+      fcTotal += set.cards.length;
+    }
+
+    // 2. Load Exercises Progress
+    final completedLessons = await UserProgressService().getCompletedLessons();
+    
+    // Group 1: Intro (0) & Vocab (1) -> "Vocabulary"
+    // Group 2: Conversation (2) -> "Conversation"
+    
+    int vCompleted = 0;
+    int vTotal = 0;
+    int cCompleted = 0;
+    int cTotal = 0;
+
+    // Helper to count
+    void countCategory(int index, {required bool isConversation}) {
+      if (index < exerciseCategories.length) {
+        final cat = exerciseCategories[index];
+        for (var lesson in cat.lessons) {
+          if (isConversation) {
+            cTotal++;
+            if (completedLessons.contains(lesson.id)) cCompleted++;
+          } else {
+            vTotal++;
+            if (completedLessons.contains(lesson.id)) vCompleted++;
+          }
+        }
+      }
+    }
+
+    // Intro & Vocab
+    countCategory(0, isConversation: false);
+    countCategory(1, isConversation: false);
+    
+    // Conversation
+    countCategory(2, isConversation: true);
+
+    // Calculate overall progress
+    final totalItems = fcTotal + vTotal + cTotal;
+    final totalCompleted = fcStudied + vCompleted + cCompleted;
+    final progress = totalItems > 0 ? totalCompleted / totalItems : 0.0;
+
+    if (mounted) {
+      setState(() {
+        _flashcardsStudied = fcStudied;
+        _flashcardsTotal = fcTotal;
+        _vocabCompleted = vCompleted;
+        _vocabTotal = vTotal;
+        _conversationCompleted = cCompleted;
+        _conversationTotal = cTotal;
+        _overallProgress = progress;
+        _flashcardSets = sets;
+        _isLoadingProgress = false;
+      });
+    }
   }
 
   @override
@@ -47,9 +129,9 @@ class _DashboardTabState extends State<DashboardTab>
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning 🌅';
-    if (hour < 17) return 'Good afternoon ☀️';
-    return 'Good evening 🌙';
+    if (hour < 12) return 'Good morning ðŸŒ…';
+    if (hour < 17) return 'Good afternoon â˜€ï¸';
+    return 'Good evening ðŸŒ™';
   }
 
   Widget _buildAnimatedSection({required double delay, required Widget child}) {
@@ -157,7 +239,16 @@ class _DashboardTabState extends State<DashboardTab>
                     const SizedBox(height: 24),
                     _buildAnimatedSection(
                       delay: 0.3,
-                      child: const _ModernProgressCard(),
+                      child: _ModernProgressCard(
+                        flashcardsStudied: _flashcardsStudied,
+                        flashcardsTotal: _flashcardsTotal,
+                        vocabCompleted: _vocabCompleted,
+                        vocabTotal: _vocabTotal,
+                        conversationCompleted: _conversationCompleted,
+                        conversationTotal: _conversationTotal,
+                        overallProgress: _overallProgress,
+                        isLoading: _isLoadingProgress,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     _buildAnimatedSection(
@@ -189,6 +280,11 @@ class _DashboardTabState extends State<DashboardTab>
                     const SizedBox(height: 24),
                     _buildAnimatedSection(
                       delay: 0.5,
+                      child: _FlashcardProgressSection(sets: _flashcardSets),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildAnimatedSection(
+                      delay: 0.6,
                       child: const _RecentActivitySection(),
                     ),
                     const SizedBox(height: 100), // Bottom padding for FAB
@@ -331,7 +427,7 @@ class _ModernStreakCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '🔥 ${user.streakCount} day streak!',
+                    'ðŸ”¥ ${user.streakCount} day streak!',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -408,7 +504,7 @@ class _AnimatedFireIconState extends State<_AnimatedFireIcon>
           scale: 1 + (_controller.value * 0.1),
           child: Transform.rotate(
             angle: math.sin(_controller.value * math.pi * 2) * 0.05,
-            child: const Text('🔥', style: TextStyle(fontSize: 72)),
+            child: const Text('ðŸ”¥', style: TextStyle(fontSize: 72)),
           ),
         );
       },
@@ -534,10 +630,47 @@ class _ModernStatCardState extends State<_ModernStatCard> {
 }
 
 class _ModernProgressCard extends StatelessWidget {
-  const _ModernProgressCard();
+  final int flashcardsStudied;
+  final int flashcardsTotal;
+  final int vocabCompleted;
+  final int vocabTotal;
+  final int conversationCompleted;
+  final int conversationTotal;
+  final double overallProgress;
+  final bool isLoading;
+
+  const _ModernProgressCard({
+    this.flashcardsStudied = 0,
+    this.flashcardsTotal = 0,
+    this.vocabCompleted = 0,
+    this.vocabTotal = 0,
+    this.conversationCompleted = 0,
+    this.conversationTotal = 0,
+    this.overallProgress = 0.0,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Container(
+        height: 200,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -558,7 +691,7 @@ class _ModernProgressCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Daily Progress',
+                'Learning Progress',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Container(
@@ -570,9 +703,9 @@ class _ModernProgressCard extends StatelessWidget {
                   color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  '3/5 completed',
-                  style: TextStyle(
+                child: Text(
+                  '${(overallProgress * 100).toInt()}% completed',
+                  style: const TextStyle(
                     color: AppColors.success,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
@@ -582,28 +715,28 @@ class _ModernProgressCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          const _AnimatedProgressBar(progress: 0.6),
+          _AnimatedProgressBar(progress: overallProgress),
           const SizedBox(height: 20),
-          const Row(
+           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _ProgressItem(
                 icon: Icons.style_rounded,
                 label: 'Flashcards',
-                value: '20/30',
-                isCompleted: true,
+                value: '$flashcardsStudied/$flashcardsTotal',
+                isCompleted: flashcardsTotal > 0 && flashcardsStudied >= flashcardsTotal,
               ),
               _ProgressItem(
-                icon: Icons.quiz_rounded,
-                label: 'Quiz',
-                value: '1/2',
-                isCompleted: false,
+                icon: Icons.school_rounded,
+                label: 'Vocabulary',
+                value: '$vocabCompleted/$vocabTotal',
+                isCompleted: vocabTotal > 0 && vocabCompleted >= vocabTotal,
               ),
               _ProgressItem(
-                icon: Icons.chat_rounded,
-                label: 'Practice',
-                value: '0/1',
-                isCompleted: false,
+                icon: Icons.camera_indoor_rounded, // or chat_rounded
+                label: 'Dialogue',
+                value: '$conversationCompleted/$conversationTotal',
+                isCompleted: conversationTotal > 0 && conversationCompleted >= conversationTotal,
               ),
             ],
           ),
@@ -922,6 +1055,179 @@ class _ActivityItem extends StatelessWidget {
           ),
           Text(time, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
         ],
+      ),
+    );
+  }
+}
+
+class _FlashcardProgressSection extends StatelessWidget {
+  final List<FlashcardSet> sets;
+
+  const _FlashcardProgressSection({required this.sets});
+
+  @override
+  Widget build(BuildContext context) {
+    if (sets.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'My Flashcards',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // TODO: Navigate to Flashcards Tab or specific "All Decks" view if needed
+                // For now, maybe just switch tab or do nothing
+              },
+              child: const Text('See all'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...sets.take(3).map((set) => _FlashcardTrackingCard(set: set)).toList(),
+      ],
+    );
+  }
+}
+
+class _FlashcardTrackingCard extends StatefulWidget {
+  final FlashcardSet set;
+
+  const _FlashcardTrackingCard({required this.set});
+
+  @override
+  State<_FlashcardTrackingCard> createState() => _FlashcardTrackingCardState();
+}
+
+class _FlashcardTrackingCardState extends State<_FlashcardTrackingCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = widget.set.cards.isNotEmpty
+        ? widget.set.studiedCount / widget.set.cards.length
+        : 0.0;
+    final percentage = (progress * 100).toInt();
+    final isCompleted = progress >= 1.0;
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: () {
+        // TODO: Navigate to Study Page for this set
+      },
+      child: AnimatedScale(
+        scale: _isPressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: isCompleted ? Colors.green.shade50.withOpacity(0.5) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isCompleted ? Colors.green.shade200 : Colors.grey.shade200,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.style_rounded,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.set.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            isCompleted ? 'Completed' : 'In Progress',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isCompleted ? Colors.green : Colors.grey[500],
+                              fontWeight: isCompleted ? FontWeight.w500 : FontWeight.normal,
+                            ),
+                          ),
+                          if (progress > 0) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '$percentage%',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (!isCompleted && progress > 0) ...[
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            backgroundColor: Colors.grey[100],
+                            valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                 if (isCompleted)
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green[500],
+                    size: 20,
+                  )
+                else
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.grey[300],
+                    size: 20,
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
