@@ -31,3 +31,14 @@ class RegisterEvent extends AuthEvent {
 class GetCurrentUserEvent extends AuthEvent {}
 
 class LogoutEvent extends AuthEvent {}
+
+class UpdateUserEvent extends AuthEvent {
+  final User user;
+
+  const UpdateUserEvent(this.user);
+
+  @override
+  List<Object> get props => [user];
+}
+
+class GoogleLoginEvent extends AuthEvent {}

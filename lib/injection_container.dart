@@ -3,16 +3,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:dio/dio.dart';
 
 import 'data/datasources/local/user_local_datasource.dart';
 import 'data/datasources/remote/auth_remote_datasource.dart';
+import 'data/datasources/remote/progress_remote_datasource.dart';
+import 'data/datasources/remote/translation_remote_datasource.dart';
+import 'data/datasources/remote/history_remote_datasource.dart';
+import 'data/datasources/remote/exam_remote_datasource.dart';
 import 'data/repositories/auth_repository_impl.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'domain/usecases/auth/login_usecase.dart';
 import 'domain/usecases/auth/register_usecase.dart';
 import 'domain/usecases/auth/get_current_user_usecase.dart';
 import 'domain/usecases/auth/logout_usecase.dart';
+import 'domain/usecases/auth/update_profile_usecase.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
 
 final sl = GetIt.instance;
@@ -33,12 +38,41 @@ Future<void> init() async {
   //=== Core ===//
   sl.registerLazySingleton(() => Supabase.instance.client);
 
+  //=== API Clients ===//
+  sl.registerLazySingleton<Dio>(() {
+    final dio = Dio();
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final session = sl<SupabaseClient>().auth.currentSession;
+          if (session?.accessToken != null) {
+            options.headers['Authorization'] = 'Bearer ${session!.accessToken}';
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+    return dio;
+  });
+
   //=== Data Sources ===//
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(supabase: sl<SupabaseClient>()),
   );
+  sl.registerLazySingleton<ProgressRemoteDataSource>(
+    () => ProgressRemoteDataSourceImpl(supabase: sl<SupabaseClient>()),
+  );
+  sl.registerLazySingleton<TranslationRemoteDataSource>(
+    () => TranslationRemoteDataSourceImpl(supabase: sl<SupabaseClient>()),
+  );
+  sl.registerLazySingleton<HistoryRemoteDataSource>(
+    () => HistoryRemoteDataSourceImpl(supabase: sl<SupabaseClient>()),
+  );
   sl.registerLazySingleton<UserLocalDataSource>(
     () => UserLocalDataSourceImpl(secureStorage: sl(), sharedPreferences: sl()),
+  );
+  sl.registerLazySingleton<ExamRemoteDataSource>(
+    () => ExamRemoteDataSource(dio: sl<Dio>(), supabase: sl<SupabaseClient>()),
   );
 
   //=== Repositories ===//
@@ -55,6 +89,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
   sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));
 
   //=== Blocs ===//
   sl.registerFactory(
@@ -63,6 +98,7 @@ Future<void> init() async {
       registerUseCase: sl(),
       getCurrentUserUseCase: sl(),
       logoutUseCase: sl(),
+      updateProfileUseCase: sl(),
     ),
   );
 }

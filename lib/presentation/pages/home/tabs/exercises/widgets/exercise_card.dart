@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../../domain/entities/conversation_models.dart';
 
 class ExerciseCard extends StatefulWidget {
@@ -27,9 +28,8 @@ class _ExerciseCardState extends State<ExerciseCard> {
 
   @override
   Widget build(BuildContext context) {
-    // If locked, we might want to disable the press animation or change it
-    // But usually we still want to tap it to show the locked dialog.
-    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) => setState(() => _isPressed = false),
@@ -46,17 +46,20 @@ class _ExerciseCardState extends State<ExerciseCard> {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: widget.isLocked 
-                ? Colors.grey[50] 
-                : (widget.isCompleted ? Colors.green.shade50.withOpacity(0.5) : Colors.white),
-            borderRadius: BorderRadius.circular(16),
+            color: widget.isLocked
+                ? (isDark ? Colors.grey[900] : Colors.grey[50])
+                : Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: widget.isCompleted ? Colors.green.shade200 : Colors.grey.shade200,
+              color: widget.isCompleted
+                  ? Colors.green.withValues(alpha: 0.3)
+                  : (isDark ? Colors.grey[800]! : Colors.grey[100]!),
+              width: 1,
             ),
             boxShadow: [
               if (!widget.isLocked)
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -71,14 +74,19 @@ class _ExerciseCardState extends State<ExerciseCard> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: widget.isLocked 
-                            ? Colors.grey[200] 
-                            : (widget.lesson.backgroundColor ?? widget.lesson.color.withOpacity(0.1)),
-                        borderRadius: BorderRadius.circular(12),
+                        color: widget.isLocked
+                            ? (isDark ? Colors.grey[800] : Colors.grey[200])
+                            : (widget.lesson.backgroundColor ??
+                                  widget.lesson.color.withValues(alpha: 0.1)),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(
-                        widget.isLocked ? Icons.lock : widget.lesson.icon,
-                        color: widget.isLocked ? Colors.grey[400] : widget.lesson.color,
+                        widget.isLocked
+                            ? Icons.lock_rounded
+                            : widget.lesson.icon,
+                        color: widget.isLocked
+                            ? (isDark ? Colors.grey[600] : Colors.grey[400])
+                            : widget.lesson.color,
                         size: 24,
                       ),
                     ),
@@ -89,35 +97,59 @@ class _ExerciseCardState extends State<ExerciseCard> {
                         children: [
                           Text(
                             widget.lesson.title,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: widget.isLocked ? Colors.grey[400] : Colors.grey[800],
+                            style: GoogleFonts.lexend(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: widget.isLocked
+                                  ? (isDark
+                                        ? Colors.grey[600]
+                                        : Colors.grey[400])
+                                  : (isDark ? Colors.white : Colors.grey[800]),
                             ),
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
                               Text(
-                                widget.isLocked 
-                                    ? 'Đang khóa' 
-                                    : (widget.isCompleted ? 'Đã hoàn thành' : 'Sẵn sàng'),
+                                widget.isLocked
+                                    ? 'Đang khóa'
+                                    : (widget.isCompleted
+                                          ? 'Đã hoàn thành'
+                                          : 'Sẵn sàng luyện tập'),
                                 style: TextStyle(
-                                  fontSize: 13,
-                                  color: widget.isLocked 
-                                      ? Colors.grey[400] 
-                                      : (widget.isCompleted ? Colors.green : Colors.grey[500]),
-                                  fontWeight: widget.isCompleted ? FontWeight.w500 : FontWeight.normal,
+                                  fontSize: 12,
+                                  color: widget.isLocked
+                                      ? (isDark
+                                            ? Colors.grey[700]
+                                            : Colors.grey[400])
+                                      : (widget.isCompleted
+                                            ? Colors.green
+                                            : Colors.grey[500]),
+                                  fontWeight: widget.isCompleted
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
                                 ),
                               ),
                               if (!widget.isLocked && widget.progress > 0) ...[
                                 const SizedBox(width: 8),
-                                Text(
-                                  '${(widget.progress * 100).toInt()}%',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: widget.lesson.color,
-                                    fontWeight: FontWeight.bold,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: widget.lesson.color.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '${(widget.progress * 100).toInt()}%',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: widget.lesson.color,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -128,31 +160,35 @@ class _ExerciseCardState extends State<ExerciseCard> {
                     ),
                     if (widget.isLocked)
                       Icon(
-                        Icons.lock_outline,
-                        color: Colors.grey[300],
+                        Icons.lock_outline_rounded,
+                        color: isDark ? Colors.grey[800] : Colors.grey[200],
                         size: 20,
                       )
                     else if (widget.isCompleted)
-                      Icon(
-                        Icons.check_circle,
-                        color: Colors.green[500],
-                        size: 20,
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.green,
+                        size: 22,
                       )
                     else
                       Icon(
-                        Icons.chevron_right,
-                        color: Colors.grey[300],
-                        size: 20,
+                        Icons.chevron_right_rounded,
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                        size: 22,
                       ),
                   ],
                 ),
-                if (!widget.isLocked && !widget.isCompleted && widget.progress > 0) ...[
-                  const SizedBox(height: 12),
+                if (!widget.isLocked &&
+                    !widget.isCompleted &&
+                    widget.progress > 0) ...[
+                  const SizedBox(height: 16),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(3),
                     child: LinearProgressIndicator(
                       value: widget.progress,
-                      backgroundColor: Colors.grey[100],
+                      backgroundColor: isDark
+                          ? Colors.grey[800]
+                          : Colors.grey[100],
                       valueColor: AlwaysStoppedAnimation(widget.lesson.color),
                       minHeight: 6,
                     ),

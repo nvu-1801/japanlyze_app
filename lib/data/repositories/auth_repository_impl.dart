@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
@@ -134,6 +135,60 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, User>> refreshToken() async {
     // TODO: Implement refresh token when backend supports it
     return const Left(ServerFailure('Refresh token not implemented'));
+  }
+
+  @override
+  Future<Either<Failure, User>> updateProfile(User user) async {
+    // Virtual Demo Mode: Bypass real API calls to avoid connection errors
+    try {
+      // We still update local storage so the change persists during the session
+      await _localDataSource.cacheUser(user);
+      debugPrint(
+        'Virtual Demo: Profile updated locally to ${user.currentLevel}',
+      );
+      return Right(user);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+
+    /* 
+    // Original real connection logic:
+    if (!await _isConnected()) {
+      return const Left(NetworkFailure());
+    }
+
+    try {
+      final updatedUser = await _remoteDataSource.updateProfile(user);
+      await _localDataSource.cacheUser(updatedUser);
+      return Right(updatedUser);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message, e.statusCode));
+    } on NetworkException {
+      return const Left(NetworkFailure());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+    */
+  }
+
+  @override
+  Future<Either<Failure, User>> signInWithGoogle() async {
+    if (!await _isConnected()) {
+      return const Left(NetworkFailure());
+    }
+
+    try {
+      final (user, token) = await _remoteDataSource.signInWithGoogle();
+      await _localDataSource.cacheToken(token);
+      await _localDataSource.cacheUser(user);
+      return Right(user);
+    } on AuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message, e.statusCode));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   Future<bool> _isConnected() async {

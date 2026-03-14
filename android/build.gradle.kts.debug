@@ -1,0 +1,5 @@
+subprojects {
+    afterEvaluate {
+        println("PROJECT_NAME: ${project.name}")
+    }
+}

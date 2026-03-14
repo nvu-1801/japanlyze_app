@@ -17,68 +17,88 @@ const UserSchema = CollectionSchema(
   name: r'User',
   id: -7838171048429979076,
   properties: {
-    r'avatarUrl': PropertySchema(
+    r'analysisUsage': PropertySchema(
       id: 0,
+      name: r'analysisUsage',
+      type: IsarType.long,
+    ),
+    r'avatarUrl': PropertySchema(
+      id: 1,
       name: r'avatarUrl',
       type: IsarType.string,
     ),
     r'createdAt': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
+    r'currentLevel': PropertySchema(
+      id: 3,
+      name: r'currentLevel',
+      type: IsarType.string,
+    ),
+    r'currentPhase': PropertySchema(
+      id: 4,
+      name: r'currentPhase',
+      type: IsarType.long,
+    ),
     r'email': PropertySchema(
-      id: 2,
+      id: 5,
       name: r'email',
       type: IsarType.string,
     ),
     r'exp': PropertySchema(
-      id: 3,
+      id: 6,
       name: r'exp',
       type: IsarType.long,
     ),
     r'isPremium': PropertySchema(
-      id: 4,
+      id: 7,
       name: r'isPremium',
       type: IsarType.bool,
     ),
     r'level': PropertySchema(
-      id: 5,
+      id: 8,
       name: r'level',
       type: IsarType.long,
     ),
     r'name': PropertySchema(
-      id: 6,
+      id: 9,
       name: r'name',
       type: IsarType.string,
     ),
+    r'onboardingCompleted': PropertySchema(
+      id: 10,
+      name: r'onboardingCompleted',
+      type: IsarType.bool,
+    ),
     r'premiumUntil': PropertySchema(
-      id: 7,
+      id: 11,
       name: r'premiumUntil',
       type: IsarType.dateTime,
     ),
     r'provider': PropertySchema(
-      id: 8,
+      id: 12,
       name: r'provider',
       type: IsarType.string,
     ),
     r'role': PropertySchema(
-      id: 9,
+      id: 13,
       name: r'role',
       type: IsarType.string,
     ),
     r'streakCount': PropertySchema(
-      id: 10,
+      id: 14,
       name: r'streakCount',
       type: IsarType.long,
     ),
     r'updatedAt': PropertySchema(
-      id: 11,
+      id: 15,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'uuid': PropertySchema(
-      id: 12,
+      id: 16,
       name: r'uuid',
       type: IsarType.string,
     )
@@ -109,6 +129,12 @@ int _userEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.currentLevel;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.email.length * 3;
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.provider.length * 3;
@@ -123,19 +149,23 @@ void _userSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.avatarUrl);
-  writer.writeDateTime(offsets[1], object.createdAt);
-  writer.writeString(offsets[2], object.email);
-  writer.writeLong(offsets[3], object.exp);
-  writer.writeBool(offsets[4], object.isPremium);
-  writer.writeLong(offsets[5], object.level);
-  writer.writeString(offsets[6], object.name);
-  writer.writeDateTime(offsets[7], object.premiumUntil);
-  writer.writeString(offsets[8], object.provider);
-  writer.writeString(offsets[9], object.role);
-  writer.writeLong(offsets[10], object.streakCount);
-  writer.writeDateTime(offsets[11], object.updatedAt);
-  writer.writeString(offsets[12], object.uuid);
+  writer.writeLong(offsets[0], object.analysisUsage);
+  writer.writeString(offsets[1], object.avatarUrl);
+  writer.writeDateTime(offsets[2], object.createdAt);
+  writer.writeString(offsets[3], object.currentLevel);
+  writer.writeLong(offsets[4], object.currentPhase);
+  writer.writeString(offsets[5], object.email);
+  writer.writeLong(offsets[6], object.exp);
+  writer.writeBool(offsets[7], object.isPremium);
+  writer.writeLong(offsets[8], object.level);
+  writer.writeString(offsets[9], object.name);
+  writer.writeBool(offsets[10], object.onboardingCompleted);
+  writer.writeDateTime(offsets[11], object.premiumUntil);
+  writer.writeString(offsets[12], object.provider);
+  writer.writeString(offsets[13], object.role);
+  writer.writeLong(offsets[14], object.streakCount);
+  writer.writeDateTime(offsets[15], object.updatedAt);
+  writer.writeString(offsets[16], object.uuid);
 }
 
 User _userDeserialize(
@@ -145,20 +175,24 @@ User _userDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = User(
-    avatarUrl: reader.readStringOrNull(offsets[0]),
-    createdAt: reader.readDateTime(offsets[1]),
-    email: reader.readString(offsets[2]),
-    exp: reader.readLongOrNull(offsets[3]) ?? 0,
+    analysisUsage: reader.readLongOrNull(offsets[0]) ?? 0,
+    avatarUrl: reader.readStringOrNull(offsets[1]),
+    createdAt: reader.readDateTime(offsets[2]),
+    currentLevel: reader.readStringOrNull(offsets[3]),
+    currentPhase: reader.readLongOrNull(offsets[4]) ?? 1,
+    email: reader.readString(offsets[5]),
+    exp: reader.readLongOrNull(offsets[6]) ?? 0,
     id: id,
-    isPremium: reader.readBoolOrNull(offsets[4]) ?? false,
-    level: reader.readLongOrNull(offsets[5]) ?? 1,
-    name: reader.readString(offsets[6]),
-    premiumUntil: reader.readDateTimeOrNull(offsets[7]),
-    provider: reader.readStringOrNull(offsets[8]) ?? 'email',
-    role: reader.readStringOrNull(offsets[9]) ?? 'user',
-    streakCount: reader.readLongOrNull(offsets[10]) ?? 0,
-    updatedAt: reader.readDateTimeOrNull(offsets[11]),
-    uuid: reader.readString(offsets[12]),
+    isPremium: reader.readBoolOrNull(offsets[7]) ?? false,
+    level: reader.readLongOrNull(offsets[8]) ?? 1,
+    name: reader.readString(offsets[9]),
+    onboardingCompleted: reader.readBoolOrNull(offsets[10]) ?? false,
+    premiumUntil: reader.readDateTimeOrNull(offsets[11]),
+    provider: reader.readStringOrNull(offsets[12]) ?? 'email',
+    role: reader.readStringOrNull(offsets[13]) ?? 'user',
+    streakCount: reader.readLongOrNull(offsets[14]) ?? 0,
+    updatedAt: reader.readDateTimeOrNull(offsets[15]),
+    uuid: reader.readString(offsets[16]),
   );
   return object;
 }
@@ -171,30 +205,38 @@ P _userDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 1:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 3:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
-    case 5:
       return (reader.readLongOrNull(offset) ?? 1) as P;
-    case 6:
+    case 5:
       return (reader.readString(offset)) as P;
-    case 7:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 8:
-      return (reader.readStringOrNull(offset) ?? 'email') as P;
-    case 9:
-      return (reader.readStringOrNull(offset) ?? 'user') as P;
-    case 10:
+    case 6:
       return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 7:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 8:
+      return (reader.readLongOrNull(offset) ?? 1) as P;
+    case 9:
+      return (reader.readString(offset)) as P;
+    case 10:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 11:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 12:
+      return (reader.readStringOrNull(offset) ?? 'email') as P;
+    case 13:
+      return (reader.readStringOrNull(offset) ?? 'user') as P;
+    case 14:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 15:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 16:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -289,6 +331,59 @@ extension UserQueryWhere on QueryBuilder<User, User, QWhereClause> {
 }
 
 extension UserQueryFilter on QueryBuilder<User, User, QFilterCondition> {
+  QueryBuilder<User, User, QAfterFilterCondition> analysisUsageEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'analysisUsage',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> analysisUsageGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'analysisUsage',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> analysisUsageLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'analysisUsage',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> analysisUsageBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'analysisUsage',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<User, User, QAfterFilterCondition> avatarUrlIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -480,6 +575,205 @@ extension UserQueryFilter on QueryBuilder<User, User, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'createdAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'currentLevel',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'currentLevel',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'currentLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'currentLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'currentLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'currentLevel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'currentLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'currentLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'currentLevel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'currentLevel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'currentLevel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentLevelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'currentLevel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentPhaseEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'currentPhase',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentPhaseGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'currentPhase',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentPhaseLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'currentPhase',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> currentPhaseBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'currentPhase',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -905,6 +1199,16 @@ extension UserQueryFilter on QueryBuilder<User, User, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'name',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> onboardingCompletedEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'onboardingCompleted',
+        value: value,
       ));
     });
   }
@@ -1491,6 +1795,18 @@ extension UserQueryObject on QueryBuilder<User, User, QFilterCondition> {}
 extension UserQueryLinks on QueryBuilder<User, User, QFilterCondition> {}
 
 extension UserQuerySortBy on QueryBuilder<User, User, QSortBy> {
+  QueryBuilder<User, User, QAfterSortBy> sortByAnalysisUsage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'analysisUsage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByAnalysisUsageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'analysisUsage', Sort.desc);
+    });
+  }
+
   QueryBuilder<User, User, QAfterSortBy> sortByAvatarUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'avatarUrl', Sort.asc);
@@ -1512,6 +1828,30 @@ extension UserQuerySortBy on QueryBuilder<User, User, QSortBy> {
   QueryBuilder<User, User, QAfterSortBy> sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByCurrentLevel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currentLevel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByCurrentLevelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currentLevel', Sort.desc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByCurrentPhase() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currentPhase', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByCurrentPhaseDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currentPhase', Sort.desc);
     });
   }
 
@@ -1572,6 +1912,18 @@ extension UserQuerySortBy on QueryBuilder<User, User, QSortBy> {
   QueryBuilder<User, User, QAfterSortBy> sortByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByOnboardingCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'onboardingCompleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByOnboardingCompletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'onboardingCompleted', Sort.desc);
     });
   }
 
@@ -1649,6 +2001,18 @@ extension UserQuerySortBy on QueryBuilder<User, User, QSortBy> {
 }
 
 extension UserQuerySortThenBy on QueryBuilder<User, User, QSortThenBy> {
+  QueryBuilder<User, User, QAfterSortBy> thenByAnalysisUsage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'analysisUsage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByAnalysisUsageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'analysisUsage', Sort.desc);
+    });
+  }
+
   QueryBuilder<User, User, QAfterSortBy> thenByAvatarUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'avatarUrl', Sort.asc);
@@ -1670,6 +2034,30 @@ extension UserQuerySortThenBy on QueryBuilder<User, User, QSortThenBy> {
   QueryBuilder<User, User, QAfterSortBy> thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByCurrentLevel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currentLevel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByCurrentLevelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currentLevel', Sort.desc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByCurrentPhase() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currentPhase', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByCurrentPhaseDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'currentPhase', Sort.desc);
     });
   }
 
@@ -1742,6 +2130,18 @@ extension UserQuerySortThenBy on QueryBuilder<User, User, QSortThenBy> {
   QueryBuilder<User, User, QAfterSortBy> thenByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByOnboardingCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'onboardingCompleted', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByOnboardingCompletedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'onboardingCompleted', Sort.desc);
     });
   }
 
@@ -1819,6 +2219,12 @@ extension UserQuerySortThenBy on QueryBuilder<User, User, QSortThenBy> {
 }
 
 extension UserQueryWhereDistinct on QueryBuilder<User, User, QDistinct> {
+  QueryBuilder<User, User, QDistinct> distinctByAnalysisUsage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'analysisUsage');
+    });
+  }
+
   QueryBuilder<User, User, QDistinct> distinctByAvatarUrl(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1829,6 +2235,19 @@ extension UserQueryWhereDistinct on QueryBuilder<User, User, QDistinct> {
   QueryBuilder<User, User, QDistinct> distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
+    });
+  }
+
+  QueryBuilder<User, User, QDistinct> distinctByCurrentLevel(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'currentLevel', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<User, User, QDistinct> distinctByCurrentPhase() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'currentPhase');
     });
   }
 
@@ -1861,6 +2280,12 @@ extension UserQueryWhereDistinct on QueryBuilder<User, User, QDistinct> {
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<User, User, QDistinct> distinctByOnboardingCompleted() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'onboardingCompleted');
     });
   }
 
@@ -1911,6 +2336,12 @@ extension UserQueryProperty on QueryBuilder<User, User, QQueryProperty> {
     });
   }
 
+  QueryBuilder<User, int, QQueryOperations> analysisUsageProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'analysisUsage');
+    });
+  }
+
   QueryBuilder<User, String?, QQueryOperations> avatarUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'avatarUrl');
@@ -1920,6 +2351,18 @@ extension UserQueryProperty on QueryBuilder<User, User, QQueryProperty> {
   QueryBuilder<User, DateTime, QQueryOperations> createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
+    });
+  }
+
+  QueryBuilder<User, String?, QQueryOperations> currentLevelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'currentLevel');
+    });
+  }
+
+  QueryBuilder<User, int, QQueryOperations> currentPhaseProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'currentPhase');
     });
   }
 
@@ -1950,6 +2393,12 @@ extension UserQueryProperty on QueryBuilder<User, User, QQueryProperty> {
   QueryBuilder<User, String, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<User, bool, QQueryOperations> onboardingCompletedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'onboardingCompleted');
     });
   }
 

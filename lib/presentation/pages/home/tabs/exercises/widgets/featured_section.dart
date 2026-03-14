@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../../core/constants/app_colors.dart';
 
 class FeaturedSection extends StatelessWidget {
@@ -10,11 +10,11 @@ class FeaturedSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(20, 10, 20, 15),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Text(
             'Chủ đề hot 🔥',
-            style: TextStyle(
+            style: GoogleFonts.lexend(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -22,9 +22,9 @@ class FeaturedSection extends StatelessWidget {
           ),
         ),
         SizedBox(
-          height: 160,
+          height: 170,
           child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             children: [
@@ -32,10 +32,10 @@ class FeaturedSection extends StatelessWidget {
                 title: 'Kaiwa Cơ bản',
                 subtitle: 'Giao tiếp hàng ngày',
                 color: Colors.blueAccent,
-                icon: Icons.chat_bubble_outline,
+                icon: Icons.chat_bubble_rounded,
                 onTap: () {},
               ),
-              const SizedBox(width: 15),
+              const SizedBox(width: 16),
               _FeaturedCard(
                 title: 'Từ vựng N5',
                 subtitle: 'Luyện thi JLPT',
@@ -43,12 +43,12 @@ class FeaturedSection extends StatelessWidget {
                 icon: Icons.menu_book_rounded,
                 onTap: () {},
               ),
-              const SizedBox(width: 15),
+              const SizedBox(width: 16),
               _FeaturedCard(
                 title: 'Ngữ điệu',
                 subtitle: 'Luyện phát âm',
                 color: Colors.pinkAccent,
-                icon: Icons.record_voice_over_outlined,
+                icon: Icons.record_voice_over_rounded,
                 onTap: () {},
               ),
             ],
@@ -79,23 +79,20 @@ class _FeaturedCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 130,
-        padding: const EdgeInsets.all(16),
+        width: 140,
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              color.withOpacity(0.8),
-              color,
-            ],
+            colors: [color.withValues(alpha: 0.8), color],
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -104,10 +101,10 @@ class _FeaturedCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: Colors.white, size: 24),
             ),
@@ -116,19 +113,21 @@ class _FeaturedCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: GoogleFonts.lexend(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 15,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 11,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

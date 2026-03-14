@@ -157,7 +157,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Login Button
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       return LoadingButton(
@@ -166,6 +165,59 @@ class _LoginPageState extends State<LoginPage> {
                         text: 'Login',
                       );
                     },
+                  ),
+                  const SizedBox(height: 24),
+                  // Divider
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey[300])),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'OR',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: Colors.grey[300])),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  // Google Login Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        context.read<AuthBloc>().add(GoogleLoginEvent());
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey[300]!),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.network(
+                            'https://w7.pngwing.com/pngs/326/85/png-transparent-google-logo-google-text-trademark-logo-thumbnail.png',
+                            height: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Continue with Google',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   // Register Link

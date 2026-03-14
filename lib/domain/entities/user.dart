@@ -17,6 +17,10 @@ class User {
   int streakCount = 0;
   int exp = 0;
   int level = 1;
+  int analysisUsage = 0;
+  bool onboardingCompleted = false;
+  String? currentLevel;
+  int currentPhase = 1;
   late DateTime createdAt;
   DateTime? updatedAt;
 
@@ -33,6 +37,10 @@ class User {
     this.streakCount = 0,
     this.exp = 0,
     this.level = 1,
+    this.analysisUsage = 0,
+    this.onboardingCompleted = false,
+    this.currentLevel,
+    this.currentPhase = 1,
     required DateTime createdAt,
     this.updatedAt,
   }) : createdAt = createdAt;
@@ -50,6 +58,10 @@ class User {
     int? streakCount,
     int? exp,
     int? level,
+    int? analysisUsage,
+    bool? onboardingCompleted,
+    String? currentLevel,
+    int? currentPhase,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -66,6 +78,10 @@ class User {
       streakCount: streakCount ?? this.streakCount,
       exp: exp ?? this.exp,
       level: level ?? this.level,
+      analysisUsage: analysisUsage ?? this.analysisUsage,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      currentLevel: currentLevel ?? this.currentLevel,
+      currentPhase: currentPhase ?? this.currentPhase,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -87,6 +103,10 @@ class User {
       streakCount: json['streakCount'] ?? 0,
       exp: json['exp'] ?? 0,
       level: json['level'] ?? 1,
+      analysisUsage: json['analysisUsage'] ?? 0,
+      onboardingCompleted: json['onboardingCompleted'] ?? false,
+      currentLevel: json['currentLevel'],
+      currentPhase: json['currentPhase'] ?? 1,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
@@ -109,6 +129,10 @@ class User {
       'streakCount': streakCount,
       'exp': exp,
       'level': level,
+      'analysisUsage': analysisUsage,
+      'onboardingCompleted': onboardingCompleted,
+      'currentLevel': currentLevel,
+      'currentPhase': currentPhase,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };

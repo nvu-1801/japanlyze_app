@@ -13,47 +13,65 @@ class HomeBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: isDark
+            ? AppColors.backgroundDark.withValues(alpha: 0.95)
+            : Colors.white.withValues(alpha: 0.95),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
         ],
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? Colors.white10
+                : Colors.black.withValues(alpha: 0.05),
+            width: 0.5,
+          ),
+        ),
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Container(
+          height: 70,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _NavItem(
-                icon: Icons.home_rounded,
+                icon: Icons.grid_view_rounded,
                 label: 'Home',
                 isSelected: currentIndex == 0,
                 onTap: () => onTap(0),
               ),
               _NavItem(
-                icon: Icons.style_rounded,
-                label: 'Cards',
+                icon: Icons.menu_book_rounded,
+                label: 'Đọc hiểu',
                 isSelected: currentIndex == 1,
                 onTap: () => onTap(1),
               ),
-              const SizedBox(width: 56), // Space for FAB
               _NavItem(
-                icon: Icons.quiz_rounded,
-                label: 'Quiz',
+                icon: Icons.directions_rounded,
+                label: 'Roadmap',
                 isSelected: currentIndex == 2,
                 onTap: () => onTap(2),
               ),
               _NavItem(
-                icon: Icons.person_rounded,
-                label: 'Profile',
+                icon: Icons.model_training_rounded,
+                label: 'Practice',
                 isSelected: currentIndex == 3,
                 onTap: () => onTap(3),
+              ),
+              _NavItem(
+                icon: Icons.quiz_rounded,
+                label: 'Đề thi',
+                isSelected: currentIndex == 4,
+                onTap: () => onTap(4),
               ),
             ],
           ),
@@ -78,39 +96,42 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedScale(
-              scale: isSelected ? 1.2 : 1.0,
-              duration: const Duration(milliseconds: 200),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
+              margin: const EdgeInsets.only(bottom: 4),
               child: Icon(
                 icon,
-                color: isSelected ? AppColors.primary : Colors.grey,
+                color: isSelected ? AppColors.primary : Colors.grey[400],
                 size: 24,
               ),
             ),
-            const SizedBox(height: 4),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 fontSize: 10,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? AppColors.primary : Colors.grey,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? AppColors.primary : Colors.grey[500],
+                letterSpacing: 0.2,
               ),
               child: Text(label),
+            ),
+            const SizedBox(height: 4),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: isSelected ? 4 : 0,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
             ),
           ],
         ),

@@ -23,14 +23,14 @@ const TranslationHistorySchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'result': PropertySchema(
+    r'sourceLang': PropertySchema(
       id: 1,
-      name: r'result',
+      name: r'sourceLang',
       type: IsarType.string,
     ),
-    r'source': PropertySchema(
+    r'sourceText': PropertySchema(
       id: 2,
-      name: r'source',
+      name: r'sourceText',
       type: IsarType.string,
     ),
     r'starred': PropertySchema(
@@ -38,20 +38,25 @@ const TranslationHistorySchema = CollectionSchema(
       name: r'starred',
       type: IsarType.bool,
     ),
-    r'target': PropertySchema(
+    r'targetLang': PropertySchema(
       id: 4,
-      name: r'target',
+      name: r'targetLang',
       type: IsarType.string,
     ),
-    r'text': PropertySchema(
+    r'targetText': PropertySchema(
       id: 5,
-      name: r'text',
+      name: r'targetText',
       type: IsarType.string,
     ),
     r'userId': PropertySchema(
       id: 6,
       name: r'userId',
-      type: IsarType.long,
+      type: IsarType.string,
+    ),
+    r'uuid': PropertySchema(
+      id: 7,
+      name: r'uuid',
+      type: IsarType.string,
     )
   },
   estimateSize: _translationHistoryEstimateSize,
@@ -74,10 +79,17 @@ int _translationHistoryEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.result.length * 3;
-  bytesCount += 3 + object.source.length * 3;
-  bytesCount += 3 + object.target.length * 3;
-  bytesCount += 3 + object.text.length * 3;
+  bytesCount += 3 + object.sourceLang.length * 3;
+  bytesCount += 3 + object.sourceText.length * 3;
+  bytesCount += 3 + object.targetLang.length * 3;
+  bytesCount += 3 + object.targetText.length * 3;
+  {
+    final value = object.userId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.uuid.length * 3;
   return bytesCount;
 }
 
@@ -88,12 +100,13 @@ void _translationHistorySerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.createdAt);
-  writer.writeString(offsets[1], object.result);
-  writer.writeString(offsets[2], object.source);
+  writer.writeString(offsets[1], object.sourceLang);
+  writer.writeString(offsets[2], object.sourceText);
   writer.writeBool(offsets[3], object.starred);
-  writer.writeString(offsets[4], object.target);
-  writer.writeString(offsets[5], object.text);
-  writer.writeLong(offsets[6], object.userId);
+  writer.writeString(offsets[4], object.targetLang);
+  writer.writeString(offsets[5], object.targetText);
+  writer.writeString(offsets[6], object.userId);
+  writer.writeString(offsets[7], object.uuid);
 }
 
 TranslationHistory _translationHistoryDeserialize(
@@ -105,12 +118,13 @@ TranslationHistory _translationHistoryDeserialize(
   final object = TranslationHistory(
     createdAt: reader.readDateTime(offsets[0]),
     id: id,
-    result: reader.readString(offsets[1]),
-    source: reader.readString(offsets[2]),
+    sourceLang: reader.readString(offsets[1]),
+    sourceText: reader.readString(offsets[2]),
     starred: reader.readBoolOrNull(offsets[3]) ?? false,
-    target: reader.readString(offsets[4]),
-    text: reader.readString(offsets[5]),
-    userId: reader.readLongOrNull(offsets[6]),
+    targetLang: reader.readString(offsets[4]),
+    targetText: reader.readString(offsets[5]),
+    userId: reader.readStringOrNull(offsets[6]),
+    uuid: reader.readString(offsets[7]),
   );
   return object;
 }
@@ -135,7 +149,9 @@ P _translationHistoryDeserializeProp<P>(
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -350,13 +366,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultEqualTo(
+      sourceLangEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'result',
+        property: r'sourceLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -364,7 +380,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultGreaterThan(
+      sourceLangGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -372,7 +388,7 @@ extension TranslationHistoryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'result',
+        property: r'sourceLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -380,7 +396,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultLessThan(
+      sourceLangLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -388,7 +404,7 @@ extension TranslationHistoryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'result',
+        property: r'sourceLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -396,7 +412,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultBetween(
+      sourceLangBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -405,7 +421,7 @@ extension TranslationHistoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'result',
+        property: r'sourceLang',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -416,13 +432,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultStartsWith(
+      sourceLangStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'result',
+        property: r'sourceLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -430,13 +446,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultEndsWith(
+      sourceLangEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'result',
+        property: r'sourceLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -444,10 +460,10 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultContains(String value, {bool caseSensitive = true}) {
+      sourceLangContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'result',
+        property: r'sourceLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -455,10 +471,10 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultMatches(String pattern, {bool caseSensitive = true}) {
+      sourceLangMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'result',
+        property: r'sourceLang',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -466,33 +482,33 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultIsEmpty() {
+      sourceLangIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'result',
+        property: r'sourceLang',
         value: '',
       ));
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      resultIsNotEmpty() {
+      sourceLangIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'result',
+        property: r'sourceLang',
         value: '',
       ));
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceEqualTo(
+      sourceTextEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'source',
+        property: r'sourceText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -500,7 +516,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceGreaterThan(
+      sourceTextGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -508,7 +524,7 @@ extension TranslationHistoryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'source',
+        property: r'sourceText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -516,7 +532,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceLessThan(
+      sourceTextLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -524,7 +540,7 @@ extension TranslationHistoryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'source',
+        property: r'sourceText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -532,7 +548,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceBetween(
+      sourceTextBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -541,7 +557,7 @@ extension TranslationHistoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'source',
+        property: r'sourceText',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -552,13 +568,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceStartsWith(
+      sourceTextStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'source',
+        property: r'sourceText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -566,13 +582,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceEndsWith(
+      sourceTextEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'source',
+        property: r'sourceText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -580,10 +596,10 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceContains(String value, {bool caseSensitive = true}) {
+      sourceTextContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'source',
+        property: r'sourceText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -591,10 +607,10 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceMatches(String pattern, {bool caseSensitive = true}) {
+      sourceTextMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'source',
+        property: r'sourceText',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -602,20 +618,20 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceIsEmpty() {
+      sourceTextIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'source',
+        property: r'sourceText',
         value: '',
       ));
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      sourceIsNotEmpty() {
+      sourceTextIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'source',
+        property: r'sourceText',
         value: '',
       ));
     });
@@ -632,13 +648,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetEqualTo(
+      targetLangEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'target',
+        property: r'targetLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -646,7 +662,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetGreaterThan(
+      targetLangGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -654,7 +670,7 @@ extension TranslationHistoryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'target',
+        property: r'targetLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -662,7 +678,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetLessThan(
+      targetLangLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -670,7 +686,7 @@ extension TranslationHistoryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'target',
+        property: r'targetLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -678,7 +694,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetBetween(
+      targetLangBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -687,7 +703,7 @@ extension TranslationHistoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'target',
+        property: r'targetLang',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -698,13 +714,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetStartsWith(
+      targetLangStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'target',
+        property: r'targetLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -712,13 +728,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetEndsWith(
+      targetLangEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'target',
+        property: r'targetLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -726,10 +742,10 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetContains(String value, {bool caseSensitive = true}) {
+      targetLangContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'target',
+        property: r'targetLang',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -737,10 +753,10 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetMatches(String pattern, {bool caseSensitive = true}) {
+      targetLangMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'target',
+        property: r'targetLang',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -748,33 +764,33 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetIsEmpty() {
+      targetLangIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'target',
+        property: r'targetLang',
         value: '',
       ));
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      targetIsNotEmpty() {
+      targetLangIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'target',
+        property: r'targetLang',
         value: '',
       ));
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textEqualTo(
+      targetTextEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'text',
+        property: r'targetText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -782,7 +798,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textGreaterThan(
+      targetTextGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -790,7 +806,7 @@ extension TranslationHistoryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'text',
+        property: r'targetText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -798,7 +814,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textLessThan(
+      targetTextLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -806,7 +822,7 @@ extension TranslationHistoryQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'text',
+        property: r'targetText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -814,7 +830,7 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textBetween(
+      targetTextBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -823,7 +839,7 @@ extension TranslationHistoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'text',
+        property: r'targetText',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -834,13 +850,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textStartsWith(
+      targetTextStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'text',
+        property: r'targetText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -848,13 +864,13 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textEndsWith(
+      targetTextEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'text',
+        property: r'targetText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -862,10 +878,10 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textContains(String value, {bool caseSensitive = true}) {
+      targetTextContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'text',
+        property: r'targetText',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -873,10 +889,10 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textMatches(String pattern, {bool caseSensitive = true}) {
+      targetTextMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'text',
+        property: r'targetText',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -884,20 +900,20 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textIsEmpty() {
+      targetTextIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'text',
+        property: r'targetText',
         value: '',
       ));
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      textIsNotEmpty() {
+      targetTextIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'text',
+        property: r'targetText',
         value: '',
       ));
     });
@@ -922,49 +938,58 @@ extension TranslationHistoryQueryFilter
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
-      userIdEqualTo(int? value) {
+      userIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'userId',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
       userIdGreaterThan(
-    int? value, {
+    String? value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'userId',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
       userIdLessThan(
-    int? value, {
+    String? value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'userId',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
       userIdBetween(
-    int? lower,
-    int? upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -973,6 +998,213 @@ extension TranslationHistoryQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      userIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'userId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      userIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'userId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      userIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'userId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      userIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'userId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      userIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      userIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'userId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'uuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'uuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'uuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'uuid',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'uuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'uuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'uuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'uuid',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'uuid',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterFilterCondition>
+      uuidIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'uuid',
+        value: '',
       ));
     });
   }
@@ -1001,30 +1233,30 @@ extension TranslationHistoryQuerySortBy
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      sortByResult() {
+      sortBySourceLang() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'result', Sort.asc);
+      return query.addSortBy(r'sourceLang', Sort.asc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      sortByResultDesc() {
+      sortBySourceLangDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'result', Sort.desc);
+      return query.addSortBy(r'sourceLang', Sort.desc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      sortBySource() {
+      sortBySourceText() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'source', Sort.asc);
+      return query.addSortBy(r'sourceText', Sort.asc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      sortBySourceDesc() {
+      sortBySourceTextDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'source', Sort.desc);
+      return query.addSortBy(r'sourceText', Sort.desc);
     });
   }
 
@@ -1043,30 +1275,30 @@ extension TranslationHistoryQuerySortBy
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      sortByTarget() {
+      sortByTargetLang() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'target', Sort.asc);
+      return query.addSortBy(r'targetLang', Sort.asc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      sortByTargetDesc() {
+      sortByTargetLangDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'target', Sort.desc);
+      return query.addSortBy(r'targetLang', Sort.desc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      sortByText() {
+      sortByTargetText() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'text', Sort.asc);
+      return query.addSortBy(r'targetText', Sort.asc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      sortByTextDesc() {
+      sortByTargetTextDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'text', Sort.desc);
+      return query.addSortBy(r'targetText', Sort.desc);
     });
   }
 
@@ -1081,6 +1313,20 @@ extension TranslationHistoryQuerySortBy
       sortByUserIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'userId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
+      sortByUuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'uuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
+      sortByUuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'uuid', Sort.desc);
     });
   }
 }
@@ -1116,30 +1362,30 @@ extension TranslationHistoryQuerySortThenBy
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      thenByResult() {
+      thenBySourceLang() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'result', Sort.asc);
+      return query.addSortBy(r'sourceLang', Sort.asc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      thenByResultDesc() {
+      thenBySourceLangDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'result', Sort.desc);
+      return query.addSortBy(r'sourceLang', Sort.desc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      thenBySource() {
+      thenBySourceText() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'source', Sort.asc);
+      return query.addSortBy(r'sourceText', Sort.asc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      thenBySourceDesc() {
+      thenBySourceTextDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'source', Sort.desc);
+      return query.addSortBy(r'sourceText', Sort.desc);
     });
   }
 
@@ -1158,30 +1404,30 @@ extension TranslationHistoryQuerySortThenBy
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      thenByTarget() {
+      thenByTargetLang() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'target', Sort.asc);
+      return query.addSortBy(r'targetLang', Sort.asc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      thenByTargetDesc() {
+      thenByTargetLangDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'target', Sort.desc);
+      return query.addSortBy(r'targetLang', Sort.desc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      thenByText() {
+      thenByTargetText() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'text', Sort.asc);
+      return query.addSortBy(r'targetText', Sort.asc);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
-      thenByTextDesc() {
+      thenByTargetTextDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'text', Sort.desc);
+      return query.addSortBy(r'targetText', Sort.desc);
     });
   }
 
@@ -1198,6 +1444,20 @@ extension TranslationHistoryQuerySortThenBy
       return query.addSortBy(r'userId', Sort.desc);
     });
   }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
+      thenByUuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'uuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QAfterSortBy>
+      thenByUuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'uuid', Sort.desc);
+    });
+  }
 }
 
 extension TranslationHistoryQueryWhereDistinct
@@ -1210,16 +1470,16 @@ extension TranslationHistoryQueryWhereDistinct
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QDistinct>
-      distinctByResult({bool caseSensitive = true}) {
+      distinctBySourceLang({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'result', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'sourceLang', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QDistinct>
-      distinctBySource({bool caseSensitive = true}) {
+      distinctBySourceText({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'source', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'sourceText', caseSensitive: caseSensitive);
     });
   }
 
@@ -1231,23 +1491,30 @@ extension TranslationHistoryQueryWhereDistinct
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QDistinct>
-      distinctByTarget({bool caseSensitive = true}) {
+      distinctByTargetLang({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'target', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'targetLang', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QDistinct>
-      distinctByText({bool caseSensitive = true}) {
+      distinctByTargetText({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'text', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'targetText', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<TranslationHistory, TranslationHistory, QDistinct>
-      distinctByUserId() {
+      distinctByUserId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'userId');
+      return query.addDistinctBy(r'userId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TranslationHistory, TranslationHistory, QDistinct>
+      distinctByUuid({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'uuid', caseSensitive: caseSensitive);
     });
   }
 }
@@ -1267,15 +1534,17 @@ extension TranslationHistoryQueryProperty
     });
   }
 
-  QueryBuilder<TranslationHistory, String, QQueryOperations> resultProperty() {
+  QueryBuilder<TranslationHistory, String, QQueryOperations>
+      sourceLangProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'result');
+      return query.addPropertyName(r'sourceLang');
     });
   }
 
-  QueryBuilder<TranslationHistory, String, QQueryOperations> sourceProperty() {
+  QueryBuilder<TranslationHistory, String, QQueryOperations>
+      sourceTextProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'source');
+      return query.addPropertyName(r'sourceText');
     });
   }
 
@@ -1285,21 +1554,29 @@ extension TranslationHistoryQueryProperty
     });
   }
 
-  QueryBuilder<TranslationHistory, String, QQueryOperations> targetProperty() {
+  QueryBuilder<TranslationHistory, String, QQueryOperations>
+      targetLangProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'target');
+      return query.addPropertyName(r'targetLang');
     });
   }
 
-  QueryBuilder<TranslationHistory, String, QQueryOperations> textProperty() {
+  QueryBuilder<TranslationHistory, String, QQueryOperations>
+      targetTextProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'text');
+      return query.addPropertyName(r'targetText');
     });
   }
 
-  QueryBuilder<TranslationHistory, int?, QQueryOperations> userIdProperty() {
+  QueryBuilder<TranslationHistory, String?, QQueryOperations> userIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'userId');
+    });
+  }
+
+  QueryBuilder<TranslationHistory, String, QQueryOperations> uuidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'uuid');
     });
   }
 }

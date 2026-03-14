@@ -1,5 +1,4 @@
 // prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,34 +9,52 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Enum types
-enum CheckinType {
-  photo
-  video
-  caption
-}
+// ==========================================
+// 1. USER & AUTHENTICATION
+// ==========================================
 
 model User {
-  id                 String               @id @default(uuid())
-  email              String               @unique
-  name               String?
-  password           String?
-  avatar             String?
-  role               String               @default("user")
-  isPremium          Boolean              @default(false)
-  provider           String               @default("email")
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  
-  // Quan hệ ngược (để truy vấn ngược từ User)
-  payments           Payment[]
-  decks              Deck[]
-  translationHistory TranslationHistory[]
-  exerciseProgress   ExerciseProgress[]
-  posts              Post[]
-  comments           Comment[]
-  likes              Like[]
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  name                String?
+  password            String?
+  avatar              String?
+  role                String               @default("user")
+  isPremium           Boolean              @default(false)
+  analysisUsage       Int                  @default(0)
+  provider            String               @default("email")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  // Relations
+  decks               Deck[]
+  exerciseProgress    ExerciseProgress[]
+  payments            Payment[]
+  translationHistory  TranslationHistory[]
+  testResults         TestResult[]
+
+  // Gamification
+  onboardingCompleted Boolean              @default(false)
+  currentLevel        String?
+  currentPhase        Int                  @default(1)
+
+  progress            UserProgress[]
 }
+
+model UserProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  questId     String
+  completedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questId])
+}
+
+// ==========================================
+// 2. PAYMENT
+// ==========================================
 
 model Payment {
   id        String   @id @default(uuid())
@@ -45,13 +62,15 @@ model Payment {
   amount    Int
   status    String
   createdAt DateTime @default(now())
-  
+
   userId    String
-  // 👇 Thêm onDelete: Cascade
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// --- 1. FLASHCARDS ---
+// ==========================================
+// 3. FLASHCARD SYSTEM
+// ==========================================
+
 model Deck {
   id          String   @id @default(uuid())
   title       String
@@ -59,7 +78,6 @@ model Deck {
   createdAt   DateTime @default(now())
 
   userId      String
-  // 👇 Thêm onDelete: Cascade
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   cards       Card[]
@@ -74,11 +92,13 @@ model Card {
   createdAt DateTime @default(now())
 
   deckId    String
-  // Đã có Cascade (Xóa bộ thẻ -> Xóa thẻ con) -> TỐT
   deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
 }
 
-// --- 2. TRANSLATE HISTORY ---
+// ==========================================
+// 4. TRANSLATION & DICTIONARY
+// ==========================================
+
 model TranslationHistory {
   id         String   @id @default(uuid())
   sourceText String
@@ -86,11 +106,39 @@ model TranslationHistory {
   createdAt  DateTime @default(now())
 
   userId     String
-  // 👇 Thêm onDelete: Cascade
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// --- 3. EXERCISES ---
+model DictionaryEntry {
+  id        String   @id @default(uuid())
+  lang      String   @default("ja")
+  lemma     String
+  reading   String?
+  romaji    String?
+  posTag    String
+  meaningVi String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  examples  ExampleSentence[]
+}
+
+model ExampleSentence {
+  id        String          @id @default(uuid())
+  jp        String
+  romaji    String?
+  vi        String?
+  createdAt DateTime        @default(now())
+
+  entryId   String
+  entry     DictionaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 5. EXERCISE PROGRESS
+// ==========================================
+
 model ExerciseProgress {
   id          String   @id @default(uuid())
   exerciseId  String
@@ -98,50 +146,51 @@ model ExerciseProgress {
   completedAt DateTime @default(now())
 
   userId      String
-  // 👇 Thêm onDelete: Cascade
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// --- 4. COMMUNITY ---
-model Post {
-  id        String   @id @default(uuid())
-  content   String
-  rating    Int      @default(5) // 👈 Thêm rating (1-5 stars)
-  createdAt DateTime @default(now())
+// ==========================================
+// 6. MOCK TEST SYSTEM
+// ==========================================
 
-  userId    String
-  // 👇 Thêm onDelete: Cascade
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model MockTest {
+  id          String     @id @default(uuid())
+  title       String
+  level       String
+  duration    Int
+  isPremium   Boolean    @default(false)
 
-  comments  Comment[]
-  likes     Like[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  questions   Question[]
+  testResults TestResult[]
 }
 
-model Comment {
-  id        String   @id @default(uuid())
-  content   String
-  createdAt DateTime @default(now())
+model Question {
+  id            String   @id @default(uuid())
+  content       String
+  imageUrl      String?
+  audioUrl      String?
+  type          String
+  options       String[]
+  correctAnswer Int
+  explanation   String?
 
-  postId    String
-  // Đã có Cascade (Xóa bài -> Xóa cmt) -> TỐT
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  userId    String
-  // 👇 Thêm onDelete: Cascade (Xóa user -> Xóa cmt của user đó)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId        String
+  test          MockTest @relation(fields: [testId], references: [id], onDelete: Cascade)
 }
 
-model Like {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+model TestResult {
+  id             String   @id @default(uuid())
+  score          Int
+  totalQuestions Int
+  answers        Json
+  completedAt    DateTime @default(now())
 
-  postId    String
-  // Đã có Cascade -> TỐT
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  userId    String
-  // 👇 Thêm onDelete: Cascade
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([postId, userId])
+  testId         String
+  test           MockTest @relation(fields: [testId], references: [id], onDelete: Cascade)
 }

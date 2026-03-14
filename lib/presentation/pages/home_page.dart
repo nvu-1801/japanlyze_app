@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/constants/app_colors.dart';
 import 'home/tabs/dashboard_tab.dart';
+import 'home/tabs/roadmap_tab.dart';
 import 'home/tabs/exercises/exercises_tab.dart';
-import 'home/tabs/flashcards_tab.dart';
-import 'home/tabs/profile_tab.dart';
+import 'home/tabs/exam_tab.dart';
+import 'home/reading_page.dart';
 import 'home/widgets/home_bottom_nav.dart';
 
 /// Main home page with modern bottom navigation
@@ -18,35 +18,14 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   int _currentIndex = 0;
-  late AnimationController _fabController;
-  late Animation<double> _fabAnimation;
 
-  final List<Widget> _pages = const [
-    DashboardTab(),
-    FlashcardsTab(),
-    ExercisesTab(),
-    ProfileTab(),
+  List<Widget> get _pages => [
+    DashboardTab(onSeeAllFlashcards: () => setState(() => _currentIndex = 3)),
+    const ReadingPage(),
+    const RoadmapTab(),
+    const ExercisesTab(),
+    const ExamTab(),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _fabController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _fabAnimation = CurvedAnimation(
-      parent: _fabController,
-      curve: Curves.easeOutBack,
-    );
-    _fabController.forward();
-  }
-
-  @override
-  void dispose() {
-    _fabController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,19 +54,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           setState(() => _currentIndex = index);
         },
       ),
-      floatingActionButton: ScaleTransition(
-        scale: _fabAnimation,
-        child: FloatingActionButton(
-          onPressed: () {
-            HapticFeedback.mediumImpact();
-            // TODO: Quick add action
-          },
-          backgroundColor: AppColors.primary,
-          elevation: 8,
-          child: const Icon(Icons.add, color: Colors.white, size: 28),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
