@@ -13,7 +13,7 @@ const uuid = Uuid();
 abstract class AuthRemoteDataSource {
   Future<(User, String)> login(String email, String password);
   Future<(User, String)> register(String name, String email, String password);
-  Future<User> getCurrentUser();
+  Future<User> getCurrentUser(String userId);
   Future<void> logout();
   Future<User> updateProfile(User user);
   Future<(User, String)> signInWithGoogle();
@@ -29,50 +29,58 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<(User, String)> login(String email, String password) async {
     try {
-      print('Supabase Login attempt for: $email');
-      final response = await _supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
+      print('Manual Login attempt for: $email');
 
-      if (response.user == null) {
-        print('Supabase Login: User is null');
-        throw const AuthException('Failed to sign in');
-      }
-
-      print(
-        'Supabase Login: Auth success, fetching user data for ID: ${response.user!.id}',
-      );
-
-      // Fetch user details from users table
+      // 1. Fetch user by email directly from the 'User' table
       final userData = await _supabase
           .from('User')
           .select()
-          .eq('id', response.user!.id)
-          .single();
+          .eq('email', email)
+          .limit(1)
+          .maybeSingle();
 
-      print('Supabase Login: User data fetched: $userData');
-
-      final user = User.fromJson(userData);
-      final token = response.session?.accessToken ?? '';
-      return (user, token);
-    } on supabase.AuthException catch (e) {
-      print('Supabase AuthException: ${e.message}');
-      // Check for legacy migration if it's an invalid credentials error
-      if (e.message.toLowerCase().contains('invalid login credentials') ||
-          e.message.toLowerCase().contains('invalid claim')) {
-        return _handleLegacyMigration(email, password);
+      if (userData == null) {
+        print('Manual Login: User not found for email: $email');
+        throw const AuthException('Tài khoản không tồn tại trong hệ thống.');
       }
-      throw AuthException(e.message);
-    } on supabase.PostgrestException catch (e) {
-      print('Supabase PostgrestException: ${e.message} (code: ${e.code})');
-      throw ServerException(
-        e.message,
-        e.code != null ? int.tryParse(e.code!) ?? 500 : 500,
-      );
+
+      // 2. Verify password using Bcrypt
+      final String? hashedPassword = userData['password'];
+      if (hashedPassword == null) {
+        print(
+          'Manual Login: User found but has no password (Google login user?).',
+        );
+        throw const AuthException(
+          'Tài khoản này không có mật khẩu. Hãy thử đăng nhập bằng Google.',
+        );
+      }
+
+      print('Manual Login: Verifying password...');
+      final bool isMatch = BCrypt.checkpw(password, hashedPassword);
+
+      if (!isMatch) {
+        print('Manual Login: Password mismatch.');
+        throw const AuthException('Mật khẩu không chính xác.');
+      }
+
+      // 3. Success - Create User object
+      final user = User.fromJson(userData);
+
+      // We use the User ID as the token since we're not using Supabase Auth JWTs
+      final token = user.uuid;
+
+      print('Manual Login: SUCCESS for user ${user.uuid}');
+      return (user, token);
+    } on AuthException {
+      rethrow;
+    } on ServerException {
+      rethrow;
     } catch (e) {
-      print('Supabase Global Exception: $e');
-      throw NetworkException('Network error: ${e.toString()}');
+      print('Manual Login Error: $e');
+      if (e is supabase.PostgrestException) {
+        throw ServerException('Lỗi cơ sở dữ liệu: ${e.message}', 500);
+      }
+      throw NetworkException('Lỗi hệ thống: ${e.toString()}');
     }
   }
 
@@ -83,120 +91,80 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String password,
   ) async {
     try {
-      print('Supabase Register attempt for: $email');
-      // Sign up with Supabase Auth
-      // The name is passed in userMetadata so the trigger can pick it up
-      final response = await _supabase.auth.signUp(
-        email: email,
-        password: password,
-        data: {'name': name},
-      );
+      print('Manual Register attempt for: $email');
 
-      if (response.user == null) {
-        throw const AuthException('Failed to create account');
+      // 1. Check if user already exists
+      final existingUser = await _supabase
+          .from('User')
+          .select('id')
+          .eq('email', email)
+          .limit(1)
+          .maybeSingle();
+
+      if (existingUser != null) {
+        throw const AuthException('Email này đã được đăng ký.');
       }
 
-      print('Supabase Register: Auth success, checking session...');
+      // 2. Hash password
+      final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
-      // If session is null, it means email confirmation is likely required
-      if (response.session == null) {
-        print(
-          'Supabase Register: Session is null, email confirmation required',
-        );
-        throw const AuthException(
-          'Account created! Please check your email to confirm your account before logging in.',
-        );
-      }
+      // 3. Create new user record
+      final userId = uuid.v4();
+      final userData = await _supabase
+          .from('User')
+          .insert({
+            'id': userId,
+            'email': email,
+            'password': hashedPassword,
+            'name': name,
+            'role': 'user',
+            'provider': 'email',
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          })
+          .select()
+          .limit(1)
+          .single();
 
-      print('Supabase Register: Session found, waiting for trigger sync...');
+      final user = User.fromJson(userData);
+      final token = user.uuid;
 
-      // Wait a brief moment for the trigger to execute
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Try to fetch the user profile with a simple retry mechanism
-      Map<String, dynamic>? userData;
-      int attempts = 0;
-      while (attempts < 3) {
-        try {
-          userData = await _supabase
-              .from('User')
-              .select()
-              .eq('id', response.user!.id)
-              .single();
-          break;
-        } catch (e) {
-          attempts++;
-          if (attempts >= 3) {
-            print('Supabase Register: Sync failed after 3 attempts: $e');
-            throw const AuthException(
-              'Account created but profile sync failed. Please check if SQL Trigger and RLS policies are applied.',
-            );
-          }
-          print('Supabase Register: Syncing... attempt $attempts');
-          await Future.delayed(const Duration(seconds: 2));
-        }
-      }
-
-      final user = User.fromJson(userData!);
-      final token = response.session?.accessToken ?? '';
+      print('Manual Register: SUCCESS for user ${user.uuid}');
       return (user, token);
-    } on supabase.AuthException catch (e) {
-      print('Supabase Register AuthException: ${e.message}');
-      if (e.message.toLowerCase().contains('user already registered')) {
-        throw const AuthException(
-          'Email này đã được đăng ký trên Web. Vui lòng sử dụng chức năng Đăng nhập để tự động đồng bộ tài khoản.',
-        );
-      }
-      throw AuthException(e.message);
-    } on supabase.PostgrestException catch (e) {
-      print('Supabase Register PostgrestException: ${e.message}');
-      throw ServerException(
-        e.message,
-        e.code != null ? int.tryParse(e.code!) ?? 500 : 500,
-      );
+    } on AuthException {
+      rethrow;
     } catch (e) {
-      print('Supabase Register Global Error: $e');
-      throw NetworkException('Network error: ${e.toString()}');
+      print('Manual Register Error: $e');
+      throw NetworkException('Lỗi đăng ký: ${e.toString()}');
     }
   }
 
   @override
-  Future<User> getCurrentUser() async {
+  Future<User> getCurrentUser(String userId) async {
     try {
-      final currentUser = _supabase.auth.currentUser;
-      if (currentUser == null) {
-        throw const AuthException('No authenticated user');
-      }
-
-      // Fetch user details from users table
       final userData = await _supabase
           .from('User')
           .select()
-          .eq('id', currentUser.id)
-          .single();
+          .eq('id', userId)
+          .limit(1)
+          .maybeSingle();
+
+      if (userData == null) {
+        throw const AuthException('User record not found');
+      }
 
       return User.fromJson(userData);
-    } on supabase.AuthException catch (e) {
-      throw AuthException(e.message);
-    } on supabase.PostgrestException catch (e) {
-      throw ServerException(
-        e.message,
-        e.code != null ? int.parse(e.code!) : 500,
-      );
     } catch (e) {
-      throw NetworkException('Network error: ${e.toString()}');
+      print('Manual getCurrentUser Error: $e');
+      throw NetworkException('Lỗi đồng bộ thông tin: ${e.toString()}');
     }
   }
 
   @override
   Future<void> logout() async {
-    try {
-      await _supabase.auth.signOut();
-    } on supabase.AuthException catch (e) {
-      throw AuthException(e.message);
-    } catch (e) {
-      throw NetworkException('Network error: ${e.toString()}');
-    }
+    // No-op for server-side in pure DB mode since there's no session to invalidate
+    print('Manual Logout: Session cleared locally.');
+    return;
   }
 
   @override
@@ -207,23 +175,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           .update(user.toJson())
           .eq('id', user.uuid)
           .select()
-          .single();
+          .limit(1)
+          .maybeSingle();
+
+      if (userData == null) {
+        throw const AuthException('Lỗi khi cập nhật thông tin người dùng.');
+      }
 
       return User.fromJson(userData);
-    } on supabase.PostgrestException catch (e) {
-      throw ServerException(
-        e.message,
-        e.code != null ? int.tryParse(e.code!) ?? 500 : 500,
-      );
     } catch (e) {
-      throw NetworkException('Network error: ${e.toString()}');
+      throw NetworkException('Lỗi cập nhật hồ sơ: ${e.toString()}');
     }
   }
 
   @override
   Future<(User, String)> signInWithGoogle() async {
     try {
-      // 1. Initialize Google Sign In
+      print('Manual Google Login Start');
+
       final GoogleSignIn googleSignIn = GoogleSignIn(
         serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],
       );
@@ -233,48 +202,25 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const AuthException('Google Sign In was cancelled');
       }
 
-      // 2. Get authentication details
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final idToken = googleAuth.idToken;
+      print(
+        'Manual Google Login: Success from Google. Email: ${googleUser.email}',
+      );
 
-      if (idToken == null) {
-        throw const AuthException('Failed to get ID Token from Google');
-      }
-
-      // 3. MANUAL DATABASE SYNC (Bypassing Supabase Auth)
-      // Mirroring the Web behavior: Only interact with the 'User' table
-
-      // Check if user exists
-      final existingUserResponse = await _supabase
+      // 1. Check if user exists in our DB
+      var userData = await _supabase
           .from('User')
           .select()
           .eq('email', googleUser.email)
+          .limit(1)
           .maybeSingle();
 
-      Map<String, dynamic> userData;
-
-      if (existingUserResponse != null) {
-        print('Manual Google Login: Existing user found, updating profile...');
-        // Update user (sync name/avatar from Google)
-        userData = await _supabase
-            .from('User')
-            .update({
-              'name': googleUser.displayName ?? existingUserResponse['name'],
-              'avatar': googleUser.photoUrl ?? existingUserResponse['avatar'],
-              'updatedAt': DateTime.now().toIso8601String(),
-            })
-            .eq('email', googleUser.email)
-            .select()
-            .single();
-      } else {
+      if (userData == null) {
         print('Manual Google Login: New user, creating record...');
-        // Create new user
+        // 2. Create new user
         userData = await _supabase
             .from('User')
             .insert({
-              'id': uuid
-                  .v4(), // Generate a new UUID if not using Supabase Auth ID
+              'id': uuid.v4(),
               'email': googleUser.email,
               'name': googleUser.displayName ?? 'User',
               'avatar': googleUser.photoUrl,
@@ -284,72 +230,33 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
               'updatedAt': DateTime.now().toIso8601String(),
             })
             .select()
+            .limit(1)
+            .single();
+      } else {
+        print('Manual Google Login: Existing user, syncing profile...');
+        // 3. Update existing user (optional sync)
+        userData = await _supabase
+            .from('User')
+            .update({
+              'name': userData['name'] ?? googleUser.displayName,
+              'avatar': userData['avatar'] ?? googleUser.photoUrl,
+              'updatedAt': DateTime.now().toIso8601String(),
+            })
+            .eq('email', googleUser.email)
+            .select()
+            .limit(1)
             .single();
       }
 
       final user = User.fromJson(userData);
-      // For manual login, we use the idToken as a temporary session identifier
-      // since we aren't creating a real Supabase Auth session.
-      return (user, idToken);
+      final token = user.uuid;
+
+      return (user, token);
+    } on AuthException {
+      rethrow;
     } catch (e) {
-      if (e is AuthException) rethrow;
-      throw NetworkException('Google Sign In error: ${e.toString()}');
+      print('Manual Google Login Error: $e');
+      throw NetworkException('Lỗi Google Login: ${e.toString()}');
     }
-  }
-
-  /// Handles migration for users who registered on the Web (Next.js/Prisma)
-  /// but haven't used Supabase Auth yet.
-  Future<(User, String)> _handleLegacyMigration(
-    String email,
-    String password,
-  ) async {
-    try {
-      print('Migration: Checking for legacy web account for $email');
-      // 1. Try to find the user in the public.User table
-      // Note: This assumes RLS allows anonymous selection for this specific purpose
-      // or that we are relying on the user's explicit intent to migrate.
-      final legacyData = await _supabase
-          .from('User')
-          .select()
-          .eq('email', email)
-          .maybeSingle();
-
-      if (legacyData != null && legacyData['password'] != null) {
-        final String hashedPassword = legacyData['password'];
-
-        // 2. Verify Bcrypt hash from legacy DB
-        if (BCrypt.checkpw(password, hashedPassword)) {
-          print(
-            'Migration: Legacy password verified. Creating Auth account...',
-          );
-
-          // 3. Create Supabase Auth account
-          // This will trigger the PostgreSQL trigger to link the User table
-          final signUpResponse = await _supabase.auth.signUp(
-            email: email,
-            password: password,
-            data: {'name': legacyData['name'] ?? 'User'},
-          );
-
-          if (signUpResponse.user != null) {
-            if (signUpResponse.session != null) {
-              print('Migration: Auth account created. Retrying login...');
-              // Re-run standard login to get full profile and token
-              return login(email, password);
-            } else {
-              // Probably needs email confirmation
-              throw const AuthException(
-                'Tài khoản Web của bạn đã được nhận diện. Vui lòng kiểm tra email để xác nhận tài khoản trước khi đăng nhập trên Mobile.',
-              );
-            }
-          }
-        }
-      }
-    } catch (e) {
-      print('Migration Error: $e');
-      if (e is AuthException) rethrow;
-    }
-
-    throw const AuthException('Thông tin đăng nhập không chính xác.');
   }
 }

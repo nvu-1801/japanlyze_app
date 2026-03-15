@@ -81,31 +81,27 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final cachedUser = await _localDataSource.getCachedUser();
 
+      if (cachedUser == null) {
+        return const Left(AuthFailure.sessionExpired);
+      }
+
       if (await _isConnected()) {
         // If connected, try to get fresh data
         try {
-          final user = await _remoteDataSource.getCurrentUser();
+          final user = await _remoteDataSource.getCurrentUser(cachedUser.uuid);
           await _localDataSource.cacheUser(user);
           return Right(user);
         } on AuthException {
-          // Token expired, clear local data
+          // Token/Session invalid (e.g. user deleted in DB), clear local data
           await _localDataSource.clearAll();
           return const Left(AuthFailure.sessionExpired);
         } catch (e) {
           // If remote fails but we have cached data, return it
-          if (cachedUser != null) {
-            return Right(cachedUser);
-          }
-          return Left(ServerFailure(e.toString()));
-        }
-      } else {
-        // Offline - return cached user if available
-        if (cachedUser != null) {
           return Right(cachedUser);
         }
-        return const Left(
-          NetworkFailure('No internet connection and no cached user'),
-        );
+      } else {
+        // Offline - return cached user
+        return Right(cachedUser);
       }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
