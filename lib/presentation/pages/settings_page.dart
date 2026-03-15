@@ -48,98 +48,114 @@ class _SettingsPageState extends State<SettingsPage> {
             uuid: '',
           );
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Cài đặt',
-          style: GoogleFonts.lexend(fontWeight: FontWeight.bold),
-        ),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/login',
+            (route) => false,
+          );
+        }
+      },
+      child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        children: [
-          // ─── Profile Header ───────────────────────────────────────────
-          _ProfileHeader(user: user),
-          const SizedBox(height: 8),
-          // ─── Appearance ──────────────────────────────────────────────
-          _SectionHeader(title: 'Giao diện'),
-          _SettingsTile(
-            icon: Icons.dark_mode_outlined,
-            title: 'Chế độ tối',
-            trailing: BlocBuilder<ThemeBloc, ThemeState>(
-              builder: (context, state) => Switch.adaptive(
-                value: state.themeMode == ThemeMode.dark,
-                activeColor: AppColors.primary,
-                onChanged: (val) =>
-                    context.read<ThemeBloc>().add(ToggleThemeEvent(val)),
+        appBar: AppBar(
+          title: Text(
+            'Cài đặt',
+            style: GoogleFonts.lexend(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          elevation: 0,
+        ),
+        body: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          children: [
+            // ─── Profile Header ───────────────────────────────────────────
+            _ProfileHeader(user: user),
+            const SizedBox(height: 8),
+            // ─── Appearance ──────────────────────────────────────────────
+            _SectionHeader(title: 'Giao diện'),
+            _SettingsTile(
+              icon: Icons.dark_mode_outlined,
+              title: 'Chế độ tối',
+              trailing: BlocBuilder<ThemeBloc, ThemeState>(
+                builder: (context, state) => Switch.adaptive(
+                  value: state.themeMode == ThemeMode.dark,
+                  activeColor: AppColors.primary,
+                  onChanged: (val) =>
+                      context.read<ThemeBloc>().add(ToggleThemeEvent(val)),
+                ),
+              ),
+              onTap: () {
+                final current = context.read<ThemeBloc>().state.themeMode;
+                context.read<ThemeBloc>().add(
+                  ToggleThemeEvent(current != ThemeMode.dark),
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // ─── Learning ────────────────────────────────────────────────────
+            _SectionHeader(title: 'Học tập'),
+            _SettingsTile(
+              icon: Icons.schedule_rounded,
+              title: 'Mục tiêu hàng ngày',
+              trailing: Text(
+                '$_dailyGoalMinutes phút',
+                style: GoogleFonts.lexend(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () => _showDailyGoalPicker(context),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ─── About ───────────────────────────────────────────────────────
+            _SectionHeader(title: 'Thông tin'),
+            _SettingsTile(
+              icon: Icons.info_outline_rounded,
+              title: 'Về JapaLyze',
+              onTap: () => showAboutDialog(
+                context: context,
+                applicationName: 'JapaLyze',
+                applicationVersion: '1.0.0',
+                applicationIcon: const FlutterLogo(size: 48),
+                children: [
+                  const Text('Học tiếng Nhật thông minh hơn mỗi ngày!'),
+                ],
               ),
             ),
-            onTap: () {
-              final current = context.read<ThemeBloc>().state.themeMode;
-              context.read<ThemeBloc>().add(
-                ToggleThemeEvent(current != ThemeMode.dark),
-              );
-            },
-          ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // ─── Learning ────────────────────────────────────────────────────
-          _SectionHeader(title: 'Học tập'),
-          _SettingsTile(
-            icon: Icons.schedule_rounded,
-            title: 'Mục tiêu hàng ngày',
-            trailing: Text(
-              '$_dailyGoalMinutes phút',
-              style: GoogleFonts.lexend(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+            // ─── Danger Zone ─────────────────────────────────────────────────
+            _SectionHeader(title: 'Tài khoản'),
+            _SettingsTile(
+              icon: Icons.logout_rounded,
+              iconColor: AppColors.error,
+              title: 'Đăng xuất',
+              titleColor: AppColors.error,
+              showChevron: false,
+              onTap: () => _showLogoutDialog(context),
+            ),
+
+            const SizedBox(height: 32),
+            Center(
+              child: Text(
+                'Phiên bản 1.0.0',
+                style: GoogleFonts.lexend(
+                  color: Colors.grey[400],
+                  fontSize: 12,
+                ),
               ),
             ),
-            onTap: () => _showDailyGoalPicker(context),
-          ),
-
-          const SizedBox(height: 16),
-
-          // ─── About ───────────────────────────────────────────────────────
-          _SectionHeader(title: 'Thông tin'),
-          _SettingsTile(
-            icon: Icons.info_outline_rounded,
-            title: 'Về JapaLyze',
-            onTap: () => showAboutDialog(
-              context: context,
-              applicationName: 'JapaLyze',
-              applicationVersion: '1.0.0',
-              applicationIcon: const FlutterLogo(size: 48),
-              children: [const Text('Học tiếng Nhật thông minh hơn mỗi ngày!')],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // ─── Danger Zone ─────────────────────────────────────────────────
-          _SectionHeader(title: 'Tài khoản'),
-          _SettingsTile(
-            icon: Icons.logout_rounded,
-            iconColor: AppColors.error,
-            title: 'Đăng xuất',
-            titleColor: AppColors.error,
-            showChevron: false,
-            onTap: () => _showLogoutDialog(context),
-          ),
-
-          const SizedBox(height: 32),
-          Center(
-            child: Text(
-              'Phiên bản 1.0.0',
-              style: GoogleFonts.lexend(color: Colors.grey[400], fontSize: 12),
-            ),
-          ),
-          const SizedBox(height: 32),
-        ],
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }

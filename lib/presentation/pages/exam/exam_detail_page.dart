@@ -14,8 +14,16 @@ import '../../blocs/auth/auth_bloc.dart';
 class ExamDetailPage extends StatefulWidget {
   final String examId;
   final String title;
+  final Exam? initialExam;
+  final bool isQuickPractice;
 
-  const ExamDetailPage({super.key, required this.examId, required this.title});
+  const ExamDetailPage({
+    super.key,
+    required this.examId,
+    required this.title,
+    this.initialExam,
+    this.isQuickPractice = false,
+  });
 
   @override
   State<ExamDetailPage> createState() => _ExamDetailPageState();
@@ -38,7 +46,16 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
   @override
   void initState() {
     super.initState();
-    _fetchExamDetail();
+    if (widget.initialExam != null) {
+      _exam = widget.initialExam;
+      _isLoading = false;
+      if (!widget.isQuickPractice) {
+        _remainingSeconds = _exam!.duration * 60;
+        _startTimer();
+      }
+    } else {
+      _fetchExamDetail();
+    }
   }
 
   @override
@@ -54,9 +71,13 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
         setState(() {
           _exam = exam;
           _isLoading = false;
-          _remainingSeconds = exam.duration * 60;
+          if (!widget.isQuickPractice) {
+            _remainingSeconds = exam.duration * 60;
+          }
         });
-        _startTimer();
+        if (!widget.isQuickPractice) {
+          _startTimer();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -99,11 +120,11 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
       });
     }
 
-    // Save result if user is authenticated
+    // Save result if user is authenticated AND not in Quick Practice mode
     final authState = context.read<AuthBloc>().state;
     debugPrint('DEBUG: _finishExam - authState: ${authState.runtimeType}');
 
-    if (authState is AuthAuthenticated) {
+    if (authState is AuthAuthenticated && !widget.isQuickPractice) {
       debugPrint('DEBUG: User authenticated: ${authState.user.uuid}');
       final result = TestResult(
         uuid: const Uuid().v4(),
@@ -158,6 +179,18 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
     return correct;
   }
 
+  void _restartPractice() {
+    setState(() {
+      _currentIndex = 0;
+      _selectedAnswers.clear();
+      _isFinished = false;
+      if (!widget.isQuickPractice) {
+        _remainingSeconds = (_exam?.duration ?? 0) * 60;
+        _startTimer();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -170,7 +203,7 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         actions: [
-          if (!_isFinished && _exam != null)
+          if (!_isFinished && _exam != null && !widget.isQuickPractice)
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Center(
@@ -627,6 +660,26 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
           }),
 
           const SizedBox(height: 32),
+          if (widget.isQuickPractice) ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _restartPractice,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(
+                  'Luyện tập lại',
+                  style: GoogleFonts.lexend(fontWeight: FontWeight.bold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           SizedBox(
             width: double.infinity,
             child: FilledButton(

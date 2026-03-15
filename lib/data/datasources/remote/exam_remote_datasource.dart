@@ -230,23 +230,14 @@ class ExamRemoteDataSource {
 
   Future<List<ReadingArticle>> getRandomReadingArticles() async {
     try {
-      debugPrint(
-        'DEBUG: GET https://japalyze-web.vercel.app/api/reading/random',
-      );
-      final response = await _dio.get(
-        'https://japalyze-web.vercel.app/api/reading/random',
-        options: Options(headers: {'x-mobile-app': 'true'}),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data;
-        return data.map((json) => ReadingArticle.fromJson(json)).toList();
-      }
-      throw ServerException('Failed to load random articles', 500);
+      // Fetch all articles to ensure maximum variety
+      final allArticles = await getReadingArticles();
+      final list = List<ReadingArticle>.from(allArticles);
+      list.shuffle();
+      return list;
     } catch (e) {
       debugPrint('DEBUG: Error in getRandomReadingArticles: $e');
-      // Fallback: get regular articles and shuffle locally
-      return getReadingArticles();
+      return [];
     }
   }
 

@@ -100,16 +100,213 @@ class _ReadingPageState extends State<ReadingPage> {
     }).toList();
   }
 
-  Future<void> _startChallenge() async {
+  final Map<String, Color> _levelColors = {
+    'Beginner': const Color(0xFF10B981),
+    'N5': const Color(0xFF22C55E),
+    'N4': const Color(0xFFA855F7),
+    'N3': const Color(0xFF3B82F6),
+    'N2': const Color(0xFFF97316),
+    'N1': const Color(0xFFEF4444),
+  };
+
+  void _showLevelSelection() {
+    Set<String> localSelected = {};
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Chọn trình độ',
+                    style: GoogleFonts.lexend(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setSheetState(() {
+                        if (localSelected.length == _levelColors.length) {
+                          localSelected.clear();
+                        } else {
+                          localSelected = _levelColors.keys.toSet();
+                        }
+                      });
+                    },
+                    child: Text(
+                      localSelected.length == _levelColors.length
+                          ? 'Bỏ chọn tất cả'
+                          : 'Chọn tất cả',
+                      style: GoogleFonts.lexend(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Chọn một hoặc nhiều trình độ để bắt đầu thử thách.',
+                style: GoogleFonts.lexend(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _levelColors.entries.map((entry) {
+                  final isSelected = localSelected.contains(entry.key);
+                  return GestureDetector(
+                    onTap: () {
+                      setSheetState(() {
+                        if (isSelected) {
+                          localSelected.remove(entry.key);
+                        } else {
+                          localSelected.add(entry.key);
+                        }
+                      });
+                    },
+                    child: Container(
+                      width: (MediaQuery.of(context).size.width - 48 - 24) / 3,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? entry.value.withValues(alpha: 0.2)
+                            : entry.value.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected
+                              ? entry.value
+                              : entry.value.withValues(alpha: 0.2),
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: entry.value,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            entry.key,
+                            style: GoogleFonts.lexend(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: entry.value,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: localSelected.isEmpty
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _startChallenge(localSelected.toList());
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    'Bắt đầu ôn luyện',
+                    style: GoogleFonts.lexend(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _startChallenge(List<String> selectedLevels) async {
     setState(() => _loading = true);
     try {
-      final randoms = await _ds.getRandomReadingArticles();
+      List<ReadingArticle> randoms = await _ds.getRandomReadingArticles();
+
+      if (selectedLevels.isNotEmpty) {
+        final levelsSet = selectedLevels
+            .map((l) => l.toUpperCase().trim())
+            .toSet();
+        randoms = randoms.where((a) {
+          final l = a.level.toUpperCase().trim();
+          return levelsSet.contains(l);
+        }).toList();
+      }
+
       if (!mounted) return;
       if (randoms.isNotEmpty) {
+        final firstArticle = randoms[math.Random().nextInt(randoms.length)];
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ReadingDetailPage(article: randoms.first),
+            builder: (_) => ReadingDetailPage(
+              article: firstArticle,
+              isChallenge: true,
+              selectedLevels: selectedLevels,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Không tìm thấy bài đọc phù hợp cho các trình độ đã chọn',
+              style: GoogleFonts.lexend(),
+            ),
           ),
         );
       }
@@ -364,7 +561,7 @@ class _ReadingPageState extends State<ReadingPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _startChallenge,
+              onPressed: _showLevelSelection,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: const Color(0xFF6366f1),
@@ -534,7 +731,14 @@ class _ArticleCard extends StatelessWidget {
 // ---------------------------------------------------------------------------
 class ReadingDetailPage extends StatefulWidget {
   final ReadingArticle article;
-  const ReadingDetailPage({super.key, required this.article});
+  final bool isChallenge;
+  final List<String>? selectedLevels;
+  const ReadingDetailPage({
+    super.key,
+    required this.article,
+    this.isChallenge = false,
+    this.selectedLevels,
+  });
 
   @override
   State<ReadingDetailPage> createState() => _ReadingDetailPageState();
@@ -542,8 +746,11 @@ class ReadingDetailPage extends StatefulWidget {
 
 class _ReadingDetailPageState extends State<ReadingDetailPage> {
   final _ds = sl<ExamRemoteDataSource>();
+  ReadingArticle? _currentArticle;
   ReadingArticle? _full;
+  List<ReadingSegment> _challengeSegments = [];
   bool _loading = true;
+  bool _fetchingNext = false;
   bool _showFurigana = true;
   bool _showRomaji = false;
   bool _showTranslation = false;
@@ -574,7 +781,12 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   @override
   void initState() {
     super.initState();
-    _loadFull();
+    _currentArticle = widget.article;
+    if (widget.isChallenge) {
+      _fetchTrulyRandomSnippet();
+    } else {
+      _loadFull();
+    }
     _initTTS();
     _initSTT();
   }
@@ -611,8 +823,9 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   }
 
   Future<void> _loadFull() async {
+    if (_currentArticle == null) return;
     try {
-      final data = await _ds.getReadingArticleDetail(widget.article.id);
+      final data = await _ds.getReadingArticleDetail(_currentArticle!.id);
       if (mounted) {
         setState(() {
           _full = data;
@@ -623,7 +836,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _full = widget.article;
+          _full = _currentArticle;
           _loading = false;
           _preparePages();
         });
@@ -631,19 +844,68 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     }
   }
 
-  void _preparePages() {
-    final content = _full?.content ?? widget.article.content ?? '';
-    final romajiContent =
-        _full?.contentRomaji ?? widget.article.contentRomaji ?? '';
-    final meaningContent =
-        _full?.contentMeaning ?? widget.article.contentMeaning ?? '';
+  Future<void> _fetchTrulyRandomSnippet() async {
+    setState(() => _loading = true);
+    try {
+      List<ReadingArticle> pool = await _ds.getRandomReadingArticles();
+      if (widget.selectedLevels != null && widget.selectedLevels!.isNotEmpty) {
+        final levels = widget.selectedLevels!
+            .map((l) => l.trim().toUpperCase())
+            .toSet();
+        pool = pool.where((a) {
+          final l = a.level.trim().toUpperCase();
+          return levels.contains(l);
+        }).toList();
+      }
 
-    if (content.isEmpty) {
-      _pages = [];
-      return;
+      if (!mounted) return;
+      if (pool.isNotEmpty) {
+        // Pick a truly random article from the pool
+        final randomArticle = pool[_random.nextInt(pool.length)];
+        final detail = await _ds.getReadingArticleDetail(randomArticle.id);
+        final allSegments = _extractSegments(detail);
+
+        // Take a random contiguous snippet of exactly 2 sentences
+        List<ReadingSegment> snippet = [];
+        if (allSegments.length > 2) {
+          const snippetLen = 2;
+          final maxStart = math.max(0, allSegments.length - snippetLen);
+          final start = _random.nextInt(maxStart + 1);
+          snippet = allSegments.sublist(
+            start,
+            math.min(start + snippetLen, allSegments.length),
+          );
+        } else {
+          snippet = allSegments;
+        }
+
+        if (mounted) {
+          setState(() {
+            _currentArticle = detail;
+            _challengeSegments = snippet;
+            _loading = false;
+            _preparePages();
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching random snippet: $e');
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _preparePages();
+        });
+      }
     }
+  }
 
-    // Smart splitting by sentence
+  List<ReadingSegment> _extractSegments(ReadingArticle article) {
+    final content = article.content ?? '';
+    final romajiContent = article.contentRomaji ?? '';
+    final meaningContent = article.contentMeaning ?? '';
+
+    if (content.isEmpty) return [];
+
     final sentencePattern = RegExp(r'[^。！？.!?]+[。！？.!?]*');
     final jpSentences = sentencePattern
         .allMatches(content)
@@ -658,10 +920,9 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
         .map((m) => m.group(0)!.trim())
         .toList();
 
-    // Zip segments
-    List<ReadingSegment> allSegments = [];
+    List<ReadingSegment> segments = [];
     for (int i = 0; i < jpSentences.length; i++) {
-      allSegments.add(
+      segments.add(
         ReadingSegment(
           japanese: jpSentences[i],
           romaji: i < romajiSentences.length ? romajiSentences[i] : null,
@@ -669,9 +930,60 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
         ),
       );
     }
+    return segments;
+  }
 
-    if (allSegments.isEmpty && content.isNotEmpty) {
-      allSegments.add(ReadingSegment(japanese: content));
+  Future<void> _fetchNextRandomArticle() async {
+    if (_fetchingNext) return;
+    setState(() => _fetchingNext = true);
+    try {
+      if (widget.isChallenge) {
+        await _fetchTrulyRandomSnippet();
+      } else {
+        final randoms = await _ds.getRandomReadingArticles();
+        if (!mounted) return;
+        if (randoms.isNotEmpty) {
+          // Try to find a different article than the current one
+          ReadingArticle next = randoms.first;
+          if (next.id == _currentArticle?.id && randoms.length > 1) {
+            next = randoms[1];
+          }
+
+          setState(() {
+            _currentArticle = next;
+            _loading = true;
+            _full = null;
+            _score = null;
+            _aiFeedback = null;
+            _aiDetails = null;
+            _lastWords = '';
+          });
+          if (_pageController.hasClients) {
+            _pageController.jumpToPage(0);
+          }
+          await _loadFull();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching next article: $e');
+    } finally {
+      if (mounted) setState(() => _fetchingNext = false);
+    }
+  }
+
+  void _preparePages() {
+    List<ReadingSegment> allSegments = [];
+
+    if (widget.isChallenge) {
+      allSegments = _challengeSegments;
+    } else {
+      final articleToUse = _full ?? _currentArticle;
+      allSegments = _extractSegments(articleToUse ?? widget.article);
+    }
+
+    if (allSegments.isEmpty) {
+      _pages = [];
+      return;
     }
 
     // Paginate segments
@@ -799,7 +1111,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final article = _full ?? widget.article;
+    final article = _full ?? _currentArticle ?? widget.article;
 
     return Scaffold(
       backgroundColor: isDark
@@ -831,7 +1143,10 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  image: article.image != null && article.image!.isNotEmpty
+                  image:
+                      article.image != null &&
+                          article.image!.isNotEmpty &&
+                          !widget.isChallenge
                       ? DecorationImage(
                           image: NetworkImage(article.image!),
                           fit: BoxFit.cover,
@@ -857,7 +1172,9 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          article.level.toUpperCase(),
+                          widget.isChallenge
+                              ? 'CHALLENGE'
+                              : article.level.toUpperCase(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -868,7 +1185,11 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                       const SizedBox(height: 12),
                       Builder(
                         builder: (context) {
-                          final parsed = _parseTitle(article.title);
+                          final parsed = _parseTitle(
+                            widget.isChallenge
+                                ? 'Thử thách ngẫu nhiên'
+                                : article.title,
+                          );
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Column(
@@ -909,6 +1230,20 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
               ),
             ),
             actions: [
+              IconButton(
+                icon: _fetchingNext
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.shuffle_rounded, color: Colors.white),
+                tooltip: 'Bài ngẫu nhiên khác',
+                onPressed: _fetchNextRandomArticle,
+              ),
               IconButton(
                 icon: Icon(
                   _showFurigana

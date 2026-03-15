@@ -194,6 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                         context.read<AuthBloc>().add(GoogleLoginEvent());
                       },
                       style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
                         side: BorderSide(color: Colors.grey[300]!),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -210,7 +211,7 @@ class _LoginPageState extends State<LoginPage> {
                           const Text(
                             'Continue with Google',
                             style: TextStyle(
-                              color: Colors.black87,
+                              color: Colors.black,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),

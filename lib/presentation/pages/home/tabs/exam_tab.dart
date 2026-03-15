@@ -72,6 +72,271 @@ class _ExamTabState extends State<ExamTab> {
     }
   }
 
+  Future<void> _startQuickPractice(List<String> selectedLevels) async {
+    if (_exams.isEmpty) return;
+
+    // Show loading overlay
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) =>
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
+    );
+
+    try {
+      // Filter exams by selectedLevels
+      List<Exam> pool = _exams;
+      if (selectedLevels.isNotEmpty) {
+        final levelsSet = selectedLevels
+            .map((l) => l.toUpperCase().trim())
+            .toSet();
+        pool = _exams.where((e) {
+          final l = e.level.toUpperCase().trim();
+          return levelsSet.contains(l);
+        }).toList();
+      }
+
+      if (pool.isEmpty) {
+        if (mounted) {
+          Navigator.pop(context); // Remove loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Không tìm thấy đề thi cho các trình độ đã chọn'),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Pick up to 5 random exams to pull questions from for better diversity
+      final shuffledExams = List<Exam>.from(pool)..shuffle();
+      final targetExams = shuffledExams.take(5).toList();
+
+      List<Question> questionPool = [];
+
+      for (var exam in targetExams) {
+        try {
+          final detail = await _dataSource.getExamDetail(exam.id);
+          if (detail.questions != null) {
+            questionPool.addAll(detail.questions!);
+          }
+        } catch (e) {
+          debugPrint('Error fetching exam detail for quick practice: $e');
+        }
+      }
+
+      if (questionPool.isEmpty) {
+        if (mounted) {
+          Navigator.pop(context); // Remove loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không tìm thấy câu hỏi.')),
+          );
+        }
+        return;
+      }
+
+      // Shuffle and pick 10
+      questionPool.shuffle();
+      final randomQuestions = questionPool.take(10).toList();
+
+      if (mounted) {
+        Navigator.pop(context); // Remove loading
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ExamDetailPage(
+              examId: 'quick-practice',
+              title: 'Ôn luyện nhanh',
+              initialExam: Exam(
+                id: 'quick-practice',
+                title: 'Ôn luyện nhanh',
+                level: 'Mixed',
+                duration: 0,
+                isPremium: false,
+                questionCount: randomQuestions.length,
+                questions: randomQuestions,
+              ),
+              isQuickPractice: true,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Quick Practice error: $e');
+      if (mounted) {
+        Navigator.pop(context); // Remove loading
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Đã có lỗi xảy ra.')));
+      }
+    }
+  }
+
+  void _showLevelSelection() {
+    Set<String> localSelected = {};
+    final Map<String, Color> displayLevels = {..._levelColors};
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Chọn trình độ ôn luyện',
+                    style: GoogleFonts.lexend(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setSheetState(() {
+                        if (localSelected.length == displayLevels.length) {
+                          localSelected.clear();
+                        } else {
+                          localSelected = displayLevels.keys.toSet();
+                        }
+                      });
+                    },
+                    child: Text(
+                      localSelected.length == displayLevels.length
+                          ? 'Bỏ chọn tất cả'
+                          : 'Chọn tất cả',
+                      style: GoogleFonts.lexend(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Hệ thống sẽ trộn các câu hỏi đúng với trình độ bạn chọn.',
+                style: GoogleFonts.lexend(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: displayLevels.keys.map((level) {
+                  final color = displayLevels[level]!;
+                  final isSelected = localSelected.contains(level);
+                  return GestureDetector(
+                    onTap: () {
+                      setSheetState(() {
+                        if (isSelected) {
+                          localSelected.remove(level);
+                        } else {
+                          localSelected.add(level);
+                        }
+                      });
+                    },
+                    child: Container(
+                      width: (MediaQuery.of(context).size.width - 48 - 24) / 3,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? color.withValues(alpha: 0.2)
+                            : color.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected
+                              ? color
+                              : color.withValues(alpha: 0.2),
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            level,
+                            style: GoogleFonts.lexend(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: color,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: localSelected.isEmpty
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _startQuickPractice(localSelected.toList());
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    'Bắt đầu ôn luyện',
+                    style: GoogleFonts.lexend(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -284,21 +549,7 @@ class _ExamTabState extends State<ExamTab> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: GestureDetector(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Ôn luyện nhanh đang phát triển!',
-                style: GoogleFonts.lexend(),
-              ),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-        },
+        onTap: _showLevelSelection,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
