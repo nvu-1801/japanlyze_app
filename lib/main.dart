@@ -95,11 +95,14 @@ class AuthWrapper extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        print('AuthWrapper: Current state: $state');
         if (state is AuthInitial || state is AuthLoading) {
           return const SplashPage();
         } else if (state is AuthAuthenticated) {
+          print('AuthWrapper: User authenticated: ${state.user.uuid}');
           return const HomePage();
         } else {
+          print('AuthWrapper: User not authenticated');
           return const LoginPage();
         }
       },

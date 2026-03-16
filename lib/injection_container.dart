@@ -19,6 +19,9 @@ import 'domain/usecases/auth/get_current_user_usecase.dart';
 import 'domain/usecases/auth/logout_usecase.dart';
 import 'domain/usecases/auth/update_profile_usecase.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
+import 'presentation/blocs/dashboard/dashboard_bloc.dart';
+import 'data/services/user_progress_service.dart';
+import 'data/services/roadmap_sync_service.dart';
 
 final sl = GetIt.instance;
 
@@ -91,14 +94,22 @@ Future<void> init() async {
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
   sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));
 
+  //=== Services ===//
+  sl.registerLazySingleton(() => UserProgressService());
+  sl.registerLazySingleton(() => RoadmapSyncService(userLocalDataSource: sl()));
+
   //=== Blocs ===//
-  sl.registerFactory(
+  sl.registerLazySingleton(
     () => AuthBloc(
       loginUseCase: sl(),
       registerUseCase: sl(),
       getCurrentUserUseCase: sl(),
       logoutUseCase: sl(),
       updateProfileUseCase: sl(),
+      syncService: sl(),
     ),
+  );
+  sl.registerFactory(
+    () => DashboardBloc(authBloc: sl(), progressService: sl()),
   );
 }

@@ -8,6 +8,7 @@ import '../../../domain/usecases/auth/register_usecase.dart';
 import '../../../domain/usecases/auth/get_current_user_usecase.dart';
 import '../../../domain/usecases/auth/logout_usecase.dart';
 import '../../../domain/usecases/auth/update_profile_usecase.dart';
+import '../../../data/services/roadmap_sync_service.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -19,6 +20,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetCurrentUserUseCase _getCurrentUserUseCase;
   final LogoutUseCase _logoutUseCase;
   final UpdateProfileUseCase _updateProfileUseCase;
+  final RoadmapSyncService _syncService;
 
   AuthBloc({
     required LoginUseCase loginUseCase,
@@ -26,11 +28,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required GetCurrentUserUseCase getCurrentUserUseCase,
     required LogoutUseCase logoutUseCase,
     required UpdateProfileUseCase updateProfileUseCase,
+    required RoadmapSyncService syncService,
   }) : _loginUseCase = loginUseCase,
        _registerUseCase = registerUseCase,
        _getCurrentUserUseCase = getCurrentUserUseCase,
        _logoutUseCase = logoutUseCase,
        _updateProfileUseCase = updateProfileUseCase,
+       _syncService = syncService,
        super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
     on<RegisterEvent>(_onRegister);
@@ -55,6 +59,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (user) {
         print('AuthBloc: Login success for user ${user.uuid}');
+        // Trigger sync from cloud after successful login
+        _syncService.syncFromCloud();
         emit(AuthAuthenticated(user));
       },
     );
@@ -71,23 +77,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ),
     );
 
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
-    );
+    result.fold((failure) => emit(AuthError(failure.message)), (user) {
+      // Trigger sync from cloud after successful registration
+      _syncService.syncFromCloud();
+      emit(AuthAuthenticated(user));
+    });
   }
 
   Future<void> _onGetCurrentUser(
     GetCurrentUserEvent event,
     Emitter<AuthState> emit,
   ) async {
+    print('AuthBloc: GetCurrentUserEvent triggered');
     emit(AuthLoading());
 
     final result = await _getCurrentUserUseCase(const NoParams());
+    print('AuthBloc: GetCurrentUser result: $result');
 
     result.fold(
-      (failure) => emit(AuthUnauthenticated()),
-      (user) => emit(AuthAuthenticated(user)),
+      (failure) {
+        print('AuthBloc: GetCurrentUser failed: ${failure.message}');
+        emit(AuthUnauthenticated());
+      },
+      (user) {
+        print('AuthBloc: GetCurrentUser success: ${user.uuid}');
+        // Trigger sync from cloud when user session is restored
+        _syncService.syncFromCloud();
+        emit(AuthAuthenticated(user));
+      },
     );
   }
 
@@ -127,9 +144,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // unless a dedicated usecase is strictly required by the user.
     final result = await _loginUseCase.repository.signInWithGoogle();
 
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (user) => emit(AuthAuthenticated(user)),
-    );
+    result.fold((failure) => emit(AuthError(failure.message)), (user) {
+      // Trigger sync from cloud after successful Google login
+      _syncService.syncFromCloud();
+      emit(AuthAuthenticated(user));
+    });
   }
 }

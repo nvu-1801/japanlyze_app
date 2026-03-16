@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get_it/get_it.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/datasources/local/roadmap_data.dart';
 import '../../../../data/datasources/local/conversation_data.dart';
 import '../../../../data/services/user_progress_service.dart';
 import '../../../../data/services/isar_service.dart';
+import '../../../../data/services/roadmap_sync_service.dart';
 import '../../../../domain/entities/roadmap_models.dart';
 import '../../lesson/conversation_lesson_page.dart';
 import '../../lesson/srs_flashcard_page.dart';
@@ -27,10 +29,12 @@ class _RoadmapTabState extends State<RoadmapTab> {
   Set<String> _completedQuestIds = {};
   Map<String, double> _questProgress = {};
   bool _isLoadingProgress = true;
+  late final RoadmapSyncService _syncService;
 
   @override
   void initState() {
     super.initState();
+    _syncService = GetIt.instance<RoadmapSyncService>();
     _initializeApp();
   }
 
@@ -39,7 +43,12 @@ class _RoadmapTabState extends State<RoadmapTab> {
     _loadProgress();
   }
 
-  Future<void> _loadProgress() async {
+  Future<void> _loadProgress({bool syncFromCloud = true}) async {
+    // Sync from cloud if requested and user is authenticated
+    if (syncFromCloud) {
+      await _syncService.syncFromCloud();
+    }
+
     final completed = await UserProgressService().getCompletedLessons();
     final progress = await UserProgressService().getAllQuestProgress();
     if (mounted) {
@@ -79,7 +88,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
   }
 
   void _onProgressUpdated() {
-    _loadProgress();
+    _loadProgress(syncFromCloud: false);
   }
 
   Future<void> _navigateToQuest(RoadmapQuest quest) async {
@@ -172,7 +181,11 @@ class _RoadmapTabState extends State<RoadmapTab> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: RefreshIndicator(
-        onRefresh: _loadProgress,
+        onRefresh: () async {
+          // Perform bidirectional sync on refresh
+          await _syncService.bidirectionalSync();
+          await _loadProgress(syncFromCloud: false);
+        },
         color: AppColors.primary,
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),

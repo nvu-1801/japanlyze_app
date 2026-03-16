@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/validators.dart';
@@ -30,6 +31,18 @@ class _LoginPageState extends State<LoginPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _emailFocusNode.requestFocus();
     });
+
+    // Debug: Check cached user data
+    _checkCachedUser();
+  }
+
+  Future<void> _checkCachedUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userData = prefs.getString('cached_user');
+    print('LoginPage: Cached user data exists: ${userData != null}');
+    if (userData != null) {
+      print('LoginPage: User data length: ${userData.length}');
+    }
   }
 
   @override
@@ -245,6 +258,33 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // Test authentication state
+          final prefs = await SharedPreferences.getInstance();
+          final userData = prefs.getString('cached_user');
+          final token = await prefs.getString('auth_token');
+
+          print('DEBUG: User data exists: ${userData != null}');
+          print('DEBUG: Token exists: ${token != null}');
+
+          if (userData != null) {
+            print('DEBUG: User data: $userData');
+          }
+
+          // Test get current user
+          context.read<AuthBloc>().add(GetCurrentUserEvent());
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Check debug console for auth status'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        },
+        child: const Icon(Icons.bug_report),
+        tooltip: 'Debug Auth',
       ),
     );
   }
