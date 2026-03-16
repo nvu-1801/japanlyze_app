@@ -130,6 +130,9 @@ class _VocabPracticePageState extends State<VocabPracticePage> {
       if (_isCorrect) _score++;
     });
 
+    // Update progress
+    _updateProgress();
+
     // Auto next after delay
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (!mounted) return;
@@ -145,6 +148,14 @@ class _VocabPracticePageState extends State<VocabPracticePage> {
         _showSummary();
       }
     });
+  }
+
+  void _updateProgress() {
+    final total = _questions.length;
+    if (total > 0 && widget.questId != null) {
+      final progress = (_currentIndex + 1) / total;
+      UserProgressService().updateQuestProgress(widget.questId!, progress);
+    }
   }
 
   Future<void> _showSummary() async {

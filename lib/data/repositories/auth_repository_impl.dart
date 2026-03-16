@@ -79,31 +79,40 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, User>> getCurrentUser() async {
     // First, try to get cached user
     try {
+      print('AuthRepository: Checking cached user...');
       final cachedUser = await _localDataSource.getCachedUser();
+      print('AuthRepository: Cached user: ${cachedUser?.uuid ?? 'null'}');
 
       if (cachedUser == null) {
+        print('AuthRepository: No cached user found');
         return const Left(AuthFailure.sessionExpired);
       }
 
       if (await _isConnected()) {
+        print('AuthRepository: Online - fetching fresh user data');
         // If connected, try to get fresh data
         try {
           final user = await _remoteDataSource.getCurrentUser(cachedUser.uuid);
           await _localDataSource.cacheUser(user);
+          print('AuthRepository: Fresh user data cached');
           return Right(user);
         } on AuthException {
+          print('AuthRepository: AuthException - clearing local data');
           // Token/Session invalid (e.g. user deleted in DB), clear local data
           await _localDataSource.clearAll();
           return const Left(AuthFailure.sessionExpired);
         } catch (e) {
+          print('AuthRepository: Remote fetch failed, using cached data: $e');
           // If remote fails but we have cached data, return it
           return Right(cachedUser);
         }
       } else {
+        print('AuthRepository: Offline - using cached user');
         // Offline - return cached user
         return Right(cachedUser);
       }
     } catch (e) {
+      print('AuthRepository: Error getting current user: $e');
       return Left(CacheFailure(e.toString()));
     }
   }

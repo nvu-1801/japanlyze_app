@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
+import '../blocs/dashboard/dashboard_bloc.dart';
 import 'home/tabs/dashboard_tab.dart';
 import 'home/tabs/roadmap_tab.dart';
 import 'home/tabs/exercises/exercises_tab.dart';
 import 'home/tabs/exam_tab.dart';
 import 'home/reading_page.dart';
 import 'home/widgets/home_bottom_nav.dart';
+
+final sl = GetIt.instance;
 
 /// Main home page with modern bottom navigation
 class HomePage extends StatefulWidget {
@@ -33,7 +38,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       extendBody: true,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        child: _pages[_currentIndex],
+        child: _buildCurrentPage(),
         transitionBuilder: (child, animation) {
           return FadeTransition(
             opacity: animation,
@@ -55,5 +60,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         },
       ),
     );
+  }
+
+  Widget _buildCurrentPage() {
+    // Provide DashboardBloc only for DashboardTab
+    if (_currentIndex == 0) {
+      return BlocProvider(
+        create: (context) => sl<DashboardBloc>(),
+        child: DashboardTab(onSeeAllFlashcards: () => setState(() => _currentIndex = 3)),
+      );
+    }
+    return _pages[_currentIndex];
   }
 }

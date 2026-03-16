@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get_it/get_it.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/datasources/local/roadmap_data.dart';
-import '../../../../domain/entities/roadmap_models.dart';
-import '../../../../data/services/user_progress_service.dart';
 import '../../../../data/datasources/local/conversation_data.dart';
+import '../../../../data/services/user_progress_service.dart';
+import '../../../../data/services/isar_service.dart';
+import '../../../../data/services/roadmap_sync_service.dart';
+import '../../../../domain/entities/roadmap_models.dart';
 import '../../lesson/conversation_lesson_page.dart';
-import '../../lesson/flashcard_page.dart';
+import '../../lesson/srs_flashcard_page.dart';
+import 'roadmap/roadmap_utils.dart';
+import 'roadmap/widgets/overall_progress_badge.dart';
+import 'roadmap/widgets/overall_progress_bar.dart';
+import 'roadmap/widgets/quest_card.dart';
+import 'roadmap/widgets/week_header.dart';
+import 'roadmap/widgets/week_tab.dart';
 
 class RoadmapTab extends StatefulWidget {
   const RoadmapTab({super.key});
@@ -18,135 +27,153 @@ class RoadmapTab extends StatefulWidget {
 class _RoadmapTabState extends State<RoadmapTab> {
   int _selectedWeekIndex = 0;
   Set<String> _completedQuestIds = {};
+  Map<String, double> _questProgress = {};
   bool _isLoadingProgress = true;
+  late final RoadmapSyncService _syncService;
 
   @override
   void initState() {
     super.initState();
+    _syncService = GetIt.instance<RoadmapSyncService>();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    await IsarService.instance.initialize();
     _loadProgress();
   }
 
-  Future<void> _loadProgress() async {
+  Future<void> _loadProgress({bool syncFromCloud = true}) async {
+    // Sync from cloud if requested and user is authenticated
+    if (syncFromCloud) {
+      await _syncService.syncFromCloud();
+    }
+
     final completed = await UserProgressService().getCompletedLessons();
+    final progress = await UserProgressService().getAllQuestProgress();
     if (mounted) {
       setState(() {
         _completedQuestIds = Set.from(completed);
+        _questProgress = progress;
         _isLoadingProgress = false;
+        _selectedWeekIndex = _calculateInitialWeekIndex();
       });
     }
   }
 
-  String _mapLinkToId(String link) {
-    if (link.contains('hiragana')) return 'hiragana';
-    if (link.contains('katakana')) return 'katakana';
-
-    final lessonMatch =
-        RegExp(r'lesson=lesson(\d+)').firstMatch(link) ??
-        RegExp(r'/lesson/(\d+)').firstMatch(link);
-    if (lessonMatch != null) {
-      final index = lessonMatch.group(1);
-      switch (index) {
-        case '1':
-          return 'conv_1_intro';
-        case '2':
-          return 'conv_2_hometown';
-        case '3':
-          return 'conv_3_friends';
-        case '4':
-          return 'conv_4_subject';
-        case '5':
-          return 'conv_5_job';
+  int _calculateInitialWeekIndex() {
+    // Tìm quest available gần nhất
+    final nextIndex = RoadmapUtils.getNextAvailableQuestIndex(
+      _completedQuestIds,
+    );
+    if (nextIndex != -1) {
+      final allQuests = n5Weeks.expand((w) => w.quests).toList();
+      final quest = allQuests[nextIndex];
+      for (int i = 0; i < n5Weeks.length; i++) {
+        if (n5Weeks[i].quests.contains(quest)) {
+          return i;
+        }
       }
     }
 
-    // Fallback: extract the last part of the path
-    final parts = link.split('/');
-    if (parts.isNotEmpty) {
-      final last = parts.last;
-      if (last.isNotEmpty) return last;
+    // Nếu không có, tìm week có completed quests gần nhất (từ cuối về đầu)
+    for (int i = n5Weeks.length - 1; i >= 0; i--) {
+      final weekQuests = n5Weeks[i].quests.map((q) => q.id).toSet();
+      if (_completedQuestIds.intersection(weekQuests).isNotEmpty) {
+        return i;
+      }
     }
 
-    return link.replaceAll('/', '');
+    return 0; // Default to week 1
   }
 
-  bool _isQuestLocked(RoadmapQuest quest) {
-    final allQuests = n5Weeks.expand((w) => w.quests).toList();
-    final index = allQuests.indexWhere((q) => q.id == quest.id);
-
-    // Ensure the very first quest is always unlocked
-    if (index <= 0) return false;
-
-    // A quest is locked if the directly preceding quest is NOT completed
-    final prevQuest = allQuests[index - 1];
-    return !_completedQuestIds.contains(prevQuest.id);
+  void _onProgressUpdated() {
+    _loadProgress(syncFromCloud: false);
   }
 
   Future<void> _navigateToQuest(RoadmapQuest quest) async {
     RoadmapQuest targetQuest = quest;
 
-    if (_isQuestLocked(quest)) {
-      final allQuests = n5Weeks.expand((w) => w.quests).toList();
-      final targetIndex = allQuests.indexWhere(
-        (q) => !_completedQuestIds.contains(q.id),
+    if (RoadmapUtils.isQuestLocked(quest, _completedQuestIds)) {
+      final targetIndex = RoadmapUtils.getNextAvailableQuestIndex(
+        _completedQuestIds,
       );
       if (targetIndex != -1) {
+        final allQuests = n5Weeks.expand((w) => w.quests).toList();
         targetQuest = allQuests[targetIndex];
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Chuyển đến bài học kế tiếp: ${targetQuest.title}'),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _showNavigationSnackBar(targetQuest.title);
       } else {
-        return; // edge case: shouldn't happen if quest is locked
+        return;
       }
     }
 
-    final lessonId = _mapLinkToId(targetQuest.link);
+    final lessonId = RoadmapUtils.mapLinkToId(targetQuest.link);
     final lessonData = conversationData
         .where((c) => c.id == lessonId)
         .firstOrNull;
 
     if (lessonData != null) {
-      Widget targetPage;
-      if (targetQuest.type == 'flashcard') {
-        targetPage = FlashcardPage(lesson: lessonData, questId: targetQuest.id);
-      } else {
-        targetPage = ConversationLessonPage(
-          lesson: lessonData,
-          questId: targetQuest.id,
-        );
-      }
-
       final result = await Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => targetPage),
+        MaterialPageRoute(
+          builder: (context) =>
+              _buildLessonPage(targetQuest, lessonData, _onProgressUpdated),
+        ),
       );
-      // Refresh progress if the lesson was completed
       if (result == true) {
         _loadProgress();
       }
     } else {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Dữ liệu bài học "${quest.title}" chưa sẵn sàng trên Mobile.',
-          ),
+      _showDataNotReadySnackBar(quest.title);
+    }
+  }
 
-          backgroundColor: Colors.orange[800],
-          behavior: SnackBarBehavior.floating,
-        ),
+  Widget _buildLessonPage(
+    RoadmapQuest quest,
+    dynamic lessonData,
+    VoidCallback onProgressUpdated,
+  ) {
+    if (quest.type == 'flashcard') {
+      return SRSFlashcardPage(
+        lesson: lessonData,
+        questId: quest.id,
+        onProgressUpdated: onProgressUpdated,
       );
     }
+    return ConversationLessonPage(
+      lesson: lessonData,
+      questId: quest.id,
+      onProgressUpdated: onProgressUpdated,
+    );
+  }
+
+  void _showNavigationSnackBar(String title) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Chuyển đến bài học kế tiếp: $title'),
+        backgroundColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showDataNotReadySnackBar(String title) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Dữ liệu bài học "$title" chưa sẵn sàng trên Mobile.'),
+        backgroundColor: Colors.orange[800],
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (n5Weeks.isEmpty)
+    if (n5Weeks.isEmpty) {
       return const Center(child: Text('Chưa có dữ liệu lộ trình.'));
+    }
 
     final selectedWeek = n5Weeks[_selectedWeekIndex];
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -154,478 +181,111 @@ class _RoadmapTabState extends State<RoadmapTab> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: RefreshIndicator(
-        onRefresh: _loadProgress,
+        onRefresh: () async {
+          // Perform bidirectional sync on refresh
+          await _syncService.bidirectionalSync();
+          await _loadProgress(syncFromCloud: false);
+        },
         color: AppColors.primary,
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // App Bar with Overall Progress
-            SliverAppBar(
-              expandedHeight: 160,
-              floating: false,
-              pinned: true,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                background: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Lộ trình N5 🗻',
-                              style: GoogleFonts.lexend(
-                                color: isDark
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 24,
-                              ),
-                            ),
-                            _buildOverallProgressBadge(),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _buildOverallProgressBar(),
-                        const SizedBox(height: 4),
-                        Text(
-                          '11 tuần · Từ Zero đến Hero',
-                          style: GoogleFonts.lexend(
-                            fontSize: 12,
-                            color: isDark ? Colors.white54 : Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                centerTitle: false,
-                titlePadding: EdgeInsets.zero,
-              ),
-            ),
-
-            // Week Selector (Horizontal)
-            SliverToBoxAdapter(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: n5Weeks.asMap().entries.map((entry) {
-                    return _buildWeekTab(entry.key, entry.value);
-                  }).toList(),
-                ),
-              ),
-            ),
-
-            // Week Detail and Quests
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  _buildWeekHeader(selectedWeek),
-                  const SizedBox(height: 20),
-                  ...selectedWeek.quests.map(
-                    (quest) => _buildQuestCard(quest, selectedWeek),
-                  ),
-                ]),
-              ),
-            ),
+            _buildSliverAppBar(isDark),
+            _buildWeekSelector(),
+            _buildWeekContent(selectedWeek),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildOverallProgressBadge() {
-    if (_isLoadingProgress)
-      return const SizedBox(
-        width: 20,
-        height: 20,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-
-    final totalQuests = n5Weeks.expand((w) => w.quests).length;
-    // Map web links to IDs for matching with _completedQuestIds
-    final questIdsInRoadmap = n5Weeks
-        .expand((w) => w.quests)
-        .map((q) => q.id)
-        .toSet();
-    final completedCount = _completedQuestIds
-        .intersection(questIdsInRoadmap)
-        .length;
-
-    final percentage = totalQuests > 0
-        ? (completedCount / totalQuests * 100).round()
-        : 0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          '$percentage%',
-          style: GoogleFonts.lexend(
-            fontWeight: FontWeight.w900,
-            fontSize: 22,
-            color: AppColors.primary,
-          ),
-        ),
-        Text(
-          '$completedCount/$totalQuests nhiệm vụ',
-          style: GoogleFonts.lexend(fontSize: 10, color: Colors.grey[500]),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOverallProgressBar() {
-    final totalQuests = n5Weeks.expand((w) => w.quests).length;
-    final questIdsInRoadmap = n5Weeks
-        .expand((w) => w.quests)
-        .map((q) => q.id)
-        .toSet();
-    final completedCount = _completedQuestIds
-        .intersection(questIdsInRoadmap)
-        .length;
-    final percentage = totalQuests > 0 ? completedCount / totalQuests : 0.0;
-
-    return Container(
-      height: 8,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: FractionallySizedBox(
-        alignment: Alignment.centerLeft,
-        widthFactor: percentage.clamp(0.01, 1.0),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.secondary],
-            ),
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWeekTab(int index, RoadmapWeek week) {
-    final isSelected = _selectedWeekIndex == index;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedWeekIndex = index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? week.iconColor
-              : (isDark ? Colors.white.withOpacity(0.05) : Colors.white),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected
-                ? Colors.transparent
-                : (isDark ? Colors.white.withOpacity(0.1) : Colors.grey[200]!),
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: week.iconColor.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
-        ),
-        child: Column(
-          children: [
-            Text(
-              '${week.week}',
-              style: GoogleFonts.lexend(
-                fontWeight: FontWeight.w900,
-                fontSize: 14,
-                color: isSelected ? Colors.white : Colors.grey[600],
-              ),
-            ),
-            Text(
-              'Tuần',
-              style: GoogleFonts.lexend(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? Colors.white.withOpacity(0.8)
-                    : Colors.grey[400],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWeekHeader(RoadmapWeek week) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final weekQuestIds = week.quests.map((q) => q.id).toSet();
-    final completedCount = _completedQuestIds.intersection(weekQuestIds).length;
-    final totalCount = week.quests.length;
-    final percentage = totalCount > 0
-        ? (completedCount / totalCount * 100).round()
-        : 0;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: week.color.withOpacity(isDark ? 0.1 : 1.0),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: week.iconColor.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: week.iconColor,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: week.iconColor.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.calendar_today,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
+  Widget _buildSliverAppBar(bool isDark) {
+    return SliverAppBar(
+      expandedHeight: 160,
+      floating: false,
+      pinned: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        background: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  week.title,
-                  style: GoogleFonts.lexend(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                    color: isDark ? Colors.white : Colors.blueGrey[800],
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Lộ trình N5 🗻',
+                      style: GoogleFonts.lexend(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 24,
+                      ),
+                    ),
+                    OverallProgressBadge(
+                      completedQuestIds: _completedQuestIds,
+                      isLoading: _isLoadingProgress,
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 12),
+                OverallProgressBar(completedQuestIds: _completedQuestIds),
+                const SizedBox(height: 4),
                 Text(
-                  week.description,
-                  style: TextStyle(
+                  '11 tuần · Từ Zero đến Hero',
+                  style: GoogleFonts.lexend(
                     fontSize: 12,
-                    color: isDark ? Colors.white70 : Colors.grey[600],
-                    height: 1.4,
+                    color: isDark ? Colors.white54 : Colors.grey[500],
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Column(
-            children: [
-              Text(
-                '$percentage%',
-                style: GoogleFonts.lexend(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 20,
-                  color: week.iconColor,
-                ),
-              ),
-              Text(
-                '$completedCount/$totalCount',
-                style: GoogleFonts.lexend(
-                  fontSize: 11,
-                  color: Colors.grey[500],
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
+        centerTitle: false,
+        titlePadding: EdgeInsets.zero,
       ),
     );
   }
 
-  Widget _buildQuestCard(RoadmapQuest quest, RoadmapWeek week) {
-    // Map web links to IDs for matching with _completedQuestIds
-    final isDone = _completedQuestIds.contains(quest.id);
-    final isLocked = _isQuestLocked(quest);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isLocked
-            ? (isDark ? Colors.white.withOpacity(0.02) : Colors.grey[100])
-            : isDone
-            ? (isDark ? Colors.green.withOpacity(0.1) : Colors.green[50])
-            : (isDark ? Colors.white.withOpacity(0.04) : Colors.white),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isLocked
-              ? (isDark ? Colors.transparent : Colors.grey[200]!)
-              : isDone
-              ? Colors.green.withOpacity(0.3)
-              : (isDark ? Colors.white.withOpacity(0.08) : Colors.grey[100]!),
+  Widget _buildWeekSelector() {
+    return SliverToBoxAdapter(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Row(
+          children: n5Weeks.asMap().entries.map((entry) {
+            return WeekTab(
+              weekNumber: entry.value.week,
+              isSelected: _selectedWeekIndex == entry.key,
+              iconColor: entry.value.iconColor,
+              onTap: () => setState(() => _selectedWeekIndex = entry.key),
+            );
+          }).toList(),
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: isLocked
-                ? () => _navigateToQuest(quest)
-                : () => _navigateToQuest(quest),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: isLocked
-                              ? Colors.grey.withOpacity(0.3)
-                              : week.color.withOpacity(isDark ? 0.2 : 0.8),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          isLocked ? Icons.lock_rounded : quest.icon,
-                          color: isLocked ? Colors.grey[600] : week.iconColor,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              quest.title,
-                              style: GoogleFonts.lexend(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: isLocked
-                                    ? Colors.grey[500]
-                                    : isDone
-                                    ? Colors.green[700]
-                                    : (isDark
-                                          ? Colors.white
-                                          : Colors.blueGrey[800]),
-                              ),
-                            ),
-                            Text(
-                              quest.description,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isLocked
-                                    ? Colors.grey[500]
-                                    : isDark
-                                    ? Colors.white38
-                                    : Colors.grey[500],
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        isLocked
-                            ? Icons.lock_outline
-                            : isDone
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        color: isLocked
-                            ? Colors.grey[400]
-                            : isDone
-                            ? Colors.green
-                            : Colors.grey[300],
-                        size: 22,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Divider(height: 1),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isLocked
-                              ? Colors.grey.withOpacity(0.1)
-                              : isDone
-                              ? Colors.green.withOpacity(0.1)
-                              : (isDark ? Colors.white10 : Colors.grey[100]),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          isDone ? '✓ Hoàn thành' : '+${quest.xp} XP',
-                          style: GoogleFonts.lexend(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: isLocked
-                                ? Colors.grey[500]
-                                : isDone
-                                ? Colors.green[700]
-                                : Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                      if (!isLocked) ...[
-                        Row(
-                          children: [
-                            Text(
-                              isDone ? 'Học lại' : 'Vào học',
-                              style: GoogleFonts.lexend(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: isDone
-                                    ? Colors.green
-                                    : AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.chevron_right,
-                              size: 14,
-                              color: isDone ? Colors.green : AppColors.primary,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
+    );
+  }
+
+  Widget _buildWeekContent(RoadmapWeek selectedWeek) {
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+      sliver: SliverList(
+        delegate: SliverChildListDelegate([
+          WeekHeader(week: selectedWeek, completedQuestIds: _completedQuestIds),
+          const SizedBox(height: 20),
+          ...selectedWeek.quests.map(
+            (quest) => QuestCard(
+              quest: quest,
+              week: selectedWeek,
+              completedQuestIds: _completedQuestIds,
+              progress: _questProgress[quest.id] ?? 0.0,
+              onTap: () => _navigateToQuest(quest),
             ),
           ),
-        ),
+        ]),
       ),
     );
   }
