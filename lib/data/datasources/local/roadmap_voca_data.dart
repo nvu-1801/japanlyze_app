@@ -95,18 +95,8 @@ final List<ConversationLesson> allJlptLessons = [
         romaji: 'nomimono',
         meaning: 'đồ uống',
       ),
-      const VocabItem(
-        kanji: '水',
-        kana: 'みず',
-        romaji: 'mizu',
-        meaning: 'nước',
-      ),
-      const VocabItem(
-        kanji: 'お茶',
-        kana: 'おちゃ',
-        romaji: 'ocha',
-        meaning: 'trà',
-      ),
+      const VocabItem(kanji: '水', kana: 'みず', romaji: 'mizu', meaning: 'nước'),
+      const VocabItem(kanji: 'お茶', kana: 'おちゃ', romaji: 'ocha', meaning: 'trà'),
     ],
   ),
   ConversationLesson(
