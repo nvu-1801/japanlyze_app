@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import 'core/theme/app_theme.dart';
+import 'data/services/isar_service.dart';
 import 'injection_container.dart' as di;
 import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/theme/theme_bloc.dart';
@@ -35,6 +36,9 @@ void main() async {
 
   // Initialize dependencies
   await di.init();
+
+  // Initialize Isar database for offline-first architecture
+  await IsarService.instance.initialize();
 
   runApp(const JapaLyzeApp());
 }

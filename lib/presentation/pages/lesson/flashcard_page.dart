@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/entities/conversation_models.dart';
+import '../../../data/services/user_progress_service.dart';
 import 'vocab_practice_page.dart';
 
 class FlashcardPage extends StatefulWidget {
@@ -64,6 +65,9 @@ class _FlashcardPageState extends State<FlashcardPage>
       _unlearnedIndices.add(_currentIndex);
     }
 
+    // Update progress
+    _updateProgress();
+
     if (_currentIndex < widget.lesson.vocabItems.length - 1) {
       setState(() {
         _isFlipped = false;
@@ -76,6 +80,14 @@ class _FlashcardPageState extends State<FlashcardPage>
       );
     } else {
       _showSummary();
+    }
+  }
+
+  void _updateProgress() {
+    final total = widget.lesson.vocabItems.length;
+    if (total > 0 && widget.questId != null) {
+      final progress = (_currentIndex + 1) / total;
+      UserProgressService().updateQuestProgress(widget.questId!, progress);
     }
   }
 
