@@ -29,6 +29,7 @@ class DashboardLoaded extends DashboardState {
   final int currentStreak;
   final DateTime? lastStudyDate;
   final int displayedXP; // For counting animation
+  final String currentJlptLevel;
 
   const DashboardLoaded({
     required this.user,
@@ -38,6 +39,7 @@ class DashboardLoaded extends DashboardState {
     this.currentStreak = 0,
     this.lastStudyDate,
     this.displayedXP = 0,
+    this.currentJlptLevel = 'N5',
   });
 
   /// Check if user has completed all quests
@@ -58,6 +60,7 @@ class DashboardLoaded extends DashboardState {
     int? currentStreak,
     DateTime? lastStudyDate,
     int? displayedXP,
+    String? currentJlptLevel,
   }) {
     return DashboardLoaded(
       user: user ?? this.user,
@@ -67,19 +70,21 @@ class DashboardLoaded extends DashboardState {
       currentStreak: currentStreak ?? this.currentStreak,
       lastStudyDate: lastStudyDate ?? this.lastStudyDate,
       displayedXP: displayedXP ?? this.displayedXP,
+      currentJlptLevel: currentJlptLevel ?? this.currentJlptLevel,
     );
   }
 
   @override
   List<Object?> get props => [
-        user,
-        nextMilestone,
-        recommendedExercises,
-        flashcardDecks,
-        currentStreak,
-        lastStudyDate,
-        displayedXP,
-      ];
+    user,
+    nextMilestone,
+    recommendedExercises,
+    flashcardDecks,
+    currentStreak,
+    lastStudyDate,
+    displayedXP,
+    currentJlptLevel,
+  ];
 }
 
 /// Error state - something went wrong

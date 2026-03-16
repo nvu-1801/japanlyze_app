@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../domain/entities/roadmap_models.dart';
 import '../../../../data/datasources/local/conversation_data.dart';
+import '../../../pages/lesson/conversation_lesson_page.dart';
+import '../../../pages/lesson/srs_flashcard_page.dart';
+import 'roadmap/roadmap_utils.dart';
 import '../../../blocs/dashboard/dashboard_bloc.dart';
 import '../../../blocs/dashboard/dashboard_event.dart';
 import '../../../blocs/dashboard/dashboard_state.dart';
@@ -23,7 +27,12 @@ import 'dashboard/widgets/skeletons/dashboard_stats_skeleton.dart';
 /// Dashboard tab with modern design using Bloc pattern
 class DashboardTab extends StatefulWidget {
   final VoidCallback? onSeeAllFlashcards;
-  const DashboardTab({super.key, this.onSeeAllFlashcards});
+  final VoidCallback? onNavigateToRoadmap;
+  const DashboardTab({
+    super.key,
+    this.onSeeAllFlashcards,
+    this.onNavigateToRoadmap,
+  });
 
   @override
   State<DashboardTab> createState() => _DashboardTabState();
@@ -178,18 +187,15 @@ class _DashboardTabState extends State<DashboardTab>
             const SizedBox(height: 8),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
-                context
-                    .read<DashboardBloc>()
-                    .add(const DashboardRefreshRequested());
+                context.read<DashboardBloc>().add(
+                  const DashboardRefreshRequested(),
+                );
               },
               icon: const Icon(Icons.refresh),
               label: const Text('Thử lại'),
@@ -233,10 +239,7 @@ class _DashboardTabState extends State<DashboardTab>
             const SizedBox(height: 12),
             Text(
               'Bắt đầu hành trình học tiếng Nhật của bạn ngay hôm nay',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -287,9 +290,7 @@ class _DashboardTabState extends State<DashboardTab>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppColors.primary.withValues(
-                              alpha: 0.3,
-                            ),
+                            color: AppColors.primary.withValues(alpha: 0.3),
                             width: 2,
                           ),
                           image: const DecorationImage(
@@ -316,7 +317,7 @@ class _DashboardTabState extends State<DashboardTab>
                         Row(
                           children: [
                             Text(
-                              '${state.user.currentLevel ?? "N5"} Journey',
+                              '${state.currentJlptLevel} Journey',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -329,9 +330,7 @@ class _DashboardTabState extends State<DashboardTab>
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.1,
-                                ),
+                                color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
                                   color: AppColors.primary.withValues(
@@ -421,7 +420,10 @@ class _DashboardTabState extends State<DashboardTab>
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
             sliver: SliverToBoxAdapter(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
@@ -512,8 +514,7 @@ class _DashboardTabState extends State<DashboardTab>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            FlashcardPage(lesson: lessonData),
+                        builder: (context) => FlashcardPage(lesson: lessonData),
                       ),
                     );
                   }
@@ -530,8 +531,47 @@ class _DashboardTabState extends State<DashboardTab>
 
   /// Navigate to lesson based on quest type
   void _navigateToLesson(dynamic quest) {
-    // Navigate to roadmap page
-    Navigator.pushNamed(context, '/roadmap');
+    if (quest is RoadmapQuest) {
+      final lessonId = RoadmapUtils.mapLinkToId(quest.link);
+      final lessonData = conversationData
+          .where((c) => c.id == lessonId)
+          .firstOrNull;
+
+      if (lessonData != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => quest.type == 'flashcard'
+                ? SRSFlashcardPage(
+                    lesson: lessonData,
+                    questId: quest.id,
+                    onProgressUpdated: () {
+                      // Reload dashboard after progress update
+                      context.read<DashboardBloc>().add(
+                        const DashboardLoadRequested(),
+                      );
+                    },
+                  )
+                : ConversationLessonPage(
+                    lesson: lessonData,
+                    questId: quest.id,
+                    onProgressUpdated: () {
+                      // Reload dashboard after progress update
+                      context.read<DashboardBloc>().add(
+                        const DashboardLoadRequested(),
+                      );
+                    },
+                  ),
+          ),
+        );
+      } else {
+        // Fallback to roadmap if lesson data not ready
+        widget.onNavigateToRoadmap?.call();
+      }
+    } else {
+      // For other types, go to roadmap
+      Navigator.pushNamed(context, '/roadmap');
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import 'conversation_data_part1.dart';
 import 'conversation_data_part2.dart';
 import 'conversation_data_part3.dart';
 import 'vocab_data.dart';
+import 'roadmap_voca_data.dart';
 
 // Mapping icons from Web (Lucide) to Flutter (Material or Lucide)
 // Web: Type, BookA, Hash, UtensilsCrossed, Trophy, CloudSun, School, Briefcase, PawPrint, Users, Apple, Carrot, Music, Cpu, Armchair, Clapperboard, Palette, Globe, Smile, Plane, AlarmClock, Shirt, MessageCircle, Heart, PartyPopper, UserCheck, MapPin, BookOpen, ShoppingBag, Leaf, Map, Home, Utensils, Stethoscope, HandCoins
@@ -319,4 +320,5 @@ final List<ConversationLesson> conversationData = [
   ...conversationDataPart2,
   ...conversationDataPart3,
   ...vocabLessonData,
+  ...allJlptLessons,
 ];

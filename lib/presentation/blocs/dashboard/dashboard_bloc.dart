@@ -46,8 +46,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       // Load completed lessons
       final completedLessons = await progressService.getCompletedLessons();
 
+      // Get current JLPT level from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final currentJlptLevel = prefs.getString('current_jlpt_level') ?? 'N5';
+
       // Find next milestone (dynamic logic)
-      final nextMilestone = await _findNextMilestone(completedLessons);
+      final nextMilestone = await _findNextMilestone(
+        completedLessons,
+        currentJlptLevel,
+      );
 
       // Generate smart recommendations (always populate, even for new users)
       final recommendations = _generateRecommendations(completedLessons);
@@ -67,6 +74,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
           currentStreak: streakData['streak'] as int,
           lastStudyDate: streakData['lastDate'] as DateTime?,
           displayedXP: user.exp,
+          currentJlptLevel: currentJlptLevel,
         ),
       );
     } catch (e) {
@@ -138,11 +146,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   /// Find the next available milestone (dynamic logic)
   Future<RoadmapQuest?> _findNextMilestone(
     List<String> completedLessons,
+    String currentLevel,
   ) async {
-    // Get current JLPT level from SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    final currentLevel = prefs.getString('current_jlpt_level') ?? 'N5';
-
     // Get roadmap data for current level
     final roadmapData = _getRoadmapDataForLevel(currentLevel);
 

@@ -25,7 +25,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   int _currentIndex = 0;
 
   List<Widget> get _pages => [
-    DashboardTab(onSeeAllFlashcards: () => setState(() => _currentIndex = 3)),
+    DashboardTab(
+      onSeeAllFlashcards: () => setState(() => _currentIndex = 3),
+      onNavigateToRoadmap: () => setState(() => _currentIndex = 2),
+    ),
     const ReadingPage(),
     const RoadmapTab(),
     const ExercisesTab(),
@@ -67,7 +70,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (_currentIndex == 0) {
       return BlocProvider(
         create: (context) => sl<DashboardBloc>(),
-        child: DashboardTab(onSeeAllFlashcards: () => setState(() => _currentIndex = 3)),
+        child: DashboardTab(
+          onSeeAllFlashcards: () => setState(() => _currentIndex = 3),
+        ),
       );
     }
     return _pages[_currentIndex];
