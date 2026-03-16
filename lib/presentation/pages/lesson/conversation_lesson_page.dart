@@ -7,8 +7,9 @@ import '../../../data/services/user_progress_service.dart';
 class ConversationLessonPage extends StatefulWidget {
   final ConversationLesson lesson;
   final String? questId;
+  final VoidCallback? onProgressUpdated;
 
-  const ConversationLessonPage({super.key, required this.lesson, this.questId});
+  const ConversationLessonPage({super.key, required this.lesson, this.questId, this.onProgressUpdated});
 
   @override
   State<ConversationLessonPage> createState() => _ConversationLessonPageState();
@@ -48,6 +49,7 @@ class _ConversationLessonPageState extends State<ConversationLessonPage> {
       
       if (widget.questId != null) {
         UserProgressService().updateQuestProgress(widget.questId!, newProgress);
+        widget.onProgressUpdated?.call();
       }
     }
   }

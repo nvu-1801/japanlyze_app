@@ -14,11 +14,13 @@ import '../../../data/services/user_progress_service.dart';
 class SRSFlashcardPage extends StatefulWidget {
   final ConversationLesson lesson;
   final String? questId;
+  final VoidCallback? onProgressUpdated;
 
   const SRSFlashcardPage({
     super.key,
     required this.lesson,
     this.questId,
+    this.onProgressUpdated,
   });
 
   @override
@@ -122,6 +124,7 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
     if (widget.questId != null) {
       final progress = (_currentIndex + 1) / _flashcards.length;
       await UserProgressService().updateQuestProgress(widget.questId!, progress);
+      widget.onProgressUpdated?.call();
     }
     
     // Haptic feedback

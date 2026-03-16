@@ -47,8 +47,37 @@ class _RoadmapTabState extends State<RoadmapTab> {
         _completedQuestIds = Set.from(completed);
         _questProgress = progress;
         _isLoadingProgress = false;
+        _selectedWeekIndex = _calculateInitialWeekIndex();
       });
     }
+  }
+
+  int _calculateInitialWeekIndex() {
+    // Tìm quest available gần nhất
+    final nextIndex = RoadmapUtils.getNextAvailableQuestIndex(_completedQuestIds);
+    if (nextIndex != -1) {
+      final allQuests = n5Weeks.expand((w) => w.quests).toList();
+      final quest = allQuests[nextIndex];
+      for (int i = 0; i < n5Weeks.length; i++) {
+        if (n5Weeks[i].quests.contains(quest)) {
+          return i;
+        }
+      }
+    }
+    
+    // Nếu không có, tìm week có completed quests gần nhất (từ cuối về đầu)
+    for (int i = n5Weeks.length - 1; i >= 0; i--) {
+      final weekQuests = n5Weeks[i].quests.map((q) => q.id).toSet();
+      if (_completedQuestIds.intersection(weekQuests).isNotEmpty) {
+        return i;
+      }
+    }
+    
+    return 0; // Default to week 1
+  }
+
+  void _onProgressUpdated() {
+    _loadProgress();
   }
 
   Future<void> _navigateToQuest(RoadmapQuest quest) async {
@@ -75,7 +104,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => _buildLessonPage(targetQuest, lessonData),
+          builder: (context) => _buildLessonPage(targetQuest, lessonData, _onProgressUpdated),
         ),
       );
       if (result == true) {
@@ -87,13 +116,14 @@ class _RoadmapTabState extends State<RoadmapTab> {
     }
   }
 
-  Widget _buildLessonPage(RoadmapQuest quest, dynamic lessonData) {
+  Widget _buildLessonPage(RoadmapQuest quest, dynamic lessonData, VoidCallback onProgressUpdated) {
     if (quest.type == 'flashcard') {
-      return SRSFlashcardPage(lesson: lessonData, questId: quest.id);
+      return SRSFlashcardPage(lesson: lessonData, questId: quest.id, onProgressUpdated: onProgressUpdated);
     }
     return ConversationLessonPage(
       lesson: lessonData,
       questId: quest.id,
+      onProgressUpdated: onProgressUpdated,
     );
   }
 
