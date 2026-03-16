@@ -18,10 +18,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   static const String _streakKey = 'user_streak';
   static const String _lastStudyDateKey = 'last_study_date';
 
-  DashboardBloc({
-    required this.authBloc,
-    required this.progressService,
-  }) : super(const DashboardInitial()) {
+  DashboardBloc({required this.authBloc, required this.progressService})
+    : super(const DashboardInitial()) {
     on<DashboardLoadRequested>(_onLoadRequested);
     on<DashboardRefreshRequested>(_onRefreshRequested);
     on<DashboardXpUpdated>(_onXpUpdated);
@@ -60,15 +58,17 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       // Calculate streak
       final streakData = await _calculateStreak();
 
-      emit(DashboardLoaded(
-        user: user,
-        nextMilestone: nextMilestone,
-        recommendedExercises: recommendations,
-        flashcardDecks: flashcardDecks,
-        currentStreak: streakData['streak'] as int,
-        lastStudyDate: streakData['lastDate'] as DateTime?,
-        displayedXP: user.exp,
-      ));
+      emit(
+        DashboardLoaded(
+          user: user,
+          nextMilestone: nextMilestone,
+          recommendedExercises: recommendations,
+          flashcardDecks: flashcardDecks,
+          currentStreak: streakData['streak'] as int,
+          lastStudyDate: streakData['lastDate'] as DateTime?,
+          displayedXP: user.exp,
+        ),
+      );
     } catch (e) {
       emit(DashboardError('Failed to load dashboard: ${e.toString()}'));
     }
@@ -136,7 +136,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   /// Find the next available milestone (dynamic logic)
-  Future<RoadmapQuest?> _findNextMilestone(List<String> completedLessons) async {
+  Future<RoadmapQuest?> _findNextMilestone(
+    List<String> completedLessons,
+  ) async {
     // Get current JLPT level from SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     final currentLevel = prefs.getString('current_jlpt_level') ?? 'N5';
@@ -221,10 +223,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       lastStudyDate = DateTime.parse(lastStudyDateStr);
     }
 
-    return {
-      'streak': streak,
-      'lastDate': lastStudyDate,
-    };
+    return {'streak': streak, 'lastDate': lastStudyDate};
   }
 
   /// Update streak after completing a lesson

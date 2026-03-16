@@ -37,7 +37,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
   late final RoadmapSyncService _syncService;
   late final RoadmapRemoteDataSource _roadmapDataSource;
   List<RoadmapWeek> _currentWeeks = [];
-  
+
   final List<String> _jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
   @override
@@ -60,7 +60,9 @@ class _RoadmapTabState extends State<RoadmapTab> {
 
   Future<void> _loadRoadmap() async {
     try {
-      final weeks = await _roadmapDataSource.getRoadmapByLevel(_selectedJlptLevel);
+      final weeks = await _roadmapDataSource.getRoadmapByLevel(
+        _selectedJlptLevel,
+      );
       if (mounted) {
         setState(() {
           _currentWeeks = weeks;
@@ -121,7 +123,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
 
   int _calculateInitialWeekIndex() {
     if (_currentWeeks.isEmpty) return 0;
-    
+
     // Tìm quest available gần nhất
     final nextIndex = RoadmapUtils.getNextAvailableQuestIndex(
       _completedQuestIds,
@@ -300,7 +302,9 @@ class _RoadmapTabState extends State<RoadmapTab> {
                         Text(
                           'Lộ trình ',
                           style: GoogleFonts.lexend(
-                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : AppColors.textPrimary,
                             fontWeight: FontWeight.w900,
                             fontSize: 24,
                           ),
@@ -344,10 +348,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
