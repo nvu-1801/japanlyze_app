@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/datasources/local/roadmap_data.dart';
 import '../../../../data/datasources/local/conversation_data.dart';
+import '../../../../data/datasources/remote/roadmap_remote_datasource.dart';
 import '../../../../data/services/user_progress_service.dart';
 import '../../../../data/services/isar_service.dart';
 import '../../../../data/services/roadmap_sync_service.dart';
@@ -26,21 +29,78 @@ class RoadmapTab extends StatefulWidget {
 
 class _RoadmapTabState extends State<RoadmapTab> {
   int _selectedWeekIndex = 0;
+  String _selectedJlptLevel = 'N5';
   Set<String> _completedQuestIds = {};
   Map<String, double> _questProgress = {};
   bool _isLoadingProgress = true;
+  bool _isLoadingRoadmap = true;
   late final RoadmapSyncService _syncService;
+  late final RoadmapRemoteDataSource _roadmapDataSource;
+  List<RoadmapWeek> _currentWeeks = [];
+
+  final List<String> _jlptLevels = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
   @override
   void initState() {
     super.initState();
     _syncService = GetIt.instance<RoadmapSyncService>();
+    _roadmapDataSource = RoadmapRemoteDataSourceImpl(
+      supabase: Supabase.instance.client,
+    );
     _initializeApp();
   }
 
   Future<void> _initializeApp() async {
     await IsarService.instance.initialize();
+    // Load saved level first
+    await _loadCurrentJlptLevel();
+    _loadRoadmap();
     _loadProgress();
+  }
+
+  Future<void> _loadRoadmap() async {
+    try {
+      final weeks = await _roadmapDataSource.getRoadmapByLevel(
+        _selectedJlptLevel,
+      );
+      if (mounted) {
+        setState(() {
+          _currentWeeks = weeks;
+          _isLoadingRoadmap = false;
+          _selectedWeekIndex = 0;
+        });
+      }
+    } catch (e) {
+      print('Failed to load roadmap for level $_selectedJlptLevel: $e');
+      // Fallback to local data based on level
+      if (mounted) {
+        setState(() {
+          _currentWeeks = _getLocalRoadmapData(_selectedJlptLevel);
+          _isLoadingRoadmap = false;
+          _selectedWeekIndex = 0;
+        });
+      }
+    }
+
+    // Save current level to SharedPreferences for dashboard sync
+    await _saveCurrentJlptLevel(_selectedJlptLevel);
+  }
+
+  List<RoadmapWeek> _getLocalRoadmapData(String level) {
+    switch (level) {
+      case 'N5':
+        return n5Weeks;
+      case 'N4':
+        return n4Weeks;
+      case 'N3':
+        return n3Weeks;
+      case 'N2':
+        return n2Weeks;
+      case 'N1':
+        return n1Weeks;
+      default:
+        return n5Weeks;
+    }
   }
 
   Future<void> _loadProgress({bool syncFromCloud = true}) async {
@@ -62,23 +122,26 @@ class _RoadmapTabState extends State<RoadmapTab> {
   }
 
   int _calculateInitialWeekIndex() {
+    if (_currentWeeks.isEmpty) return 0;
+
     // Tìm quest available gần nhất
     final nextIndex = RoadmapUtils.getNextAvailableQuestIndex(
       _completedQuestIds,
+      _currentWeeks,
     );
     if (nextIndex != -1) {
-      final allQuests = n5Weeks.expand((w) => w.quests).toList();
+      final allQuests = _currentWeeks.expand((w) => w.quests).toList();
       final quest = allQuests[nextIndex];
-      for (int i = 0; i < n5Weeks.length; i++) {
-        if (n5Weeks[i].quests.contains(quest)) {
+      for (int i = 0; i < _currentWeeks.length; i++) {
+        if (_currentWeeks[i].quests.contains(quest)) {
           return i;
         }
       }
     }
 
     // Nếu không có, tìm week có completed quests gần nhất (từ cuối về đầu)
-    for (int i = n5Weeks.length - 1; i >= 0; i--) {
-      final weekQuests = n5Weeks[i].quests.map((q) => q.id).toSet();
+    for (int i = _currentWeeks.length - 1; i >= 0; i--) {
+      final weekQuests = _currentWeeks[i].quests.map((q) => q.id).toSet();
       if (_completedQuestIds.intersection(weekQuests).isNotEmpty) {
         return i;
       }
@@ -94,12 +157,13 @@ class _RoadmapTabState extends State<RoadmapTab> {
   Future<void> _navigateToQuest(RoadmapQuest quest) async {
     RoadmapQuest targetQuest = quest;
 
-    if (RoadmapUtils.isQuestLocked(quest, _completedQuestIds)) {
+    if (RoadmapUtils.isQuestLocked(quest, _completedQuestIds, _currentWeeks)) {
       final targetIndex = RoadmapUtils.getNextAvailableQuestIndex(
         _completedQuestIds,
+        _currentWeeks,
       );
       if (targetIndex != -1) {
-        final allQuests = n5Weeks.expand((w) => w.quests).toList();
+        final allQuests = _currentWeeks.expand((w) => w.quests).toList();
         targetQuest = allQuests[targetIndex];
         if (!mounted) return;
         _showNavigationSnackBar(targetQuest.title);
@@ -169,13 +233,30 @@ class _RoadmapTabState extends State<RoadmapTab> {
     );
   }
 
+  Future<void> _saveCurrentJlptLevel(String level) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('current_jlpt_level', level);
+  }
+
+  Future<void> _loadCurrentJlptLevel() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLevel = prefs.getString('current_jlpt_level');
+    if (savedLevel != null && _jlptLevels.contains(savedLevel)) {
+      _selectedJlptLevel = savedLevel;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (n5Weeks.isEmpty) {
+    if (_isLoadingRoadmap) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_currentWeeks.isEmpty) {
       return const Center(child: Text('Chưa có dữ liệu lộ trình.'));
     }
 
-    final selectedWeek = n5Weeks[_selectedWeekIndex];
+    final selectedWeek = _currentWeeks[_selectedWeekIndex];
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -201,7 +282,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
 
   Widget _buildSliverAppBar(bool isDark) {
     return SliverAppBar(
-      expandedHeight: 160,
+      expandedHeight: 180,
       floating: false,
       pinned: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -216,22 +297,33 @@ class _RoadmapTabState extends State<RoadmapTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Lộ trình N5 🗻',
-                      style: GoogleFonts.lexend(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 24,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'Lộ trình ',
+                          style: GoogleFonts.lexend(
+                            color: isDark
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 24,
+                          ),
+                        ),
+                        _buildJlptLevelDropdown(isDark),
+                      ],
                     ),
                     OverallProgressBadge(
                       completedQuestIds: _completedQuestIds,
                       isLoading: _isLoadingProgress,
+                      weeks: _currentWeeks,
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                OverallProgressBar(completedQuestIds: _completedQuestIds),
+                OverallProgressBar(
+                  completedQuestIds: _completedQuestIds,
+                  weeks: _currentWeeks,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   '11 tuần · Từ Zero đến Hero',
@@ -250,13 +342,64 @@ class _RoadmapTabState extends State<RoadmapTab> {
     );
   }
 
+  Widget _buildJlptLevelDropdown(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedJlptLevel,
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            color: AppColors.primary,
+            size: 20,
+          ),
+          style: GoogleFonts.lexend(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w900,
+            fontSize: 24,
+          ),
+          dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          items: _jlptLevels.map((String level) {
+            return DropdownMenuItem<String>(
+              value: level,
+              child: Text(
+                level,
+                style: GoogleFonts.lexend(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 24,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedJlptLevel = newValue;
+                _selectedWeekIndex = 0;
+                _isLoadingRoadmap = true;
+              });
+              _loadRoadmap();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildWeekSelector() {
     return SliverToBoxAdapter(
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Row(
-          children: n5Weeks.asMap().entries.map((entry) {
+          children: _currentWeeks.asMap().entries.map((entry) {
             return WeekTab(
               weekNumber: entry.value.week,
               isSelected: _selectedWeekIndex == entry.key,
@@ -283,6 +426,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
               completedQuestIds: _completedQuestIds,
               progress: _questProgress[quest.id] ?? 0.0,
               onTap: () => _navigateToQuest(quest),
+              weeks: _currentWeeks,
             ),
           ),
         ]),

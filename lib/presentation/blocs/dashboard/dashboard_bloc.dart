@@ -18,10 +18,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   static const String _streakKey = 'user_streak';
   static const String _lastStudyDateKey = 'last_study_date';
 
-  DashboardBloc({
-    required this.authBloc,
-    required this.progressService,
-  }) : super(const DashboardInitial()) {
+  DashboardBloc({required this.authBloc, required this.progressService})
+    : super(const DashboardInitial()) {
     on<DashboardLoadRequested>(_onLoadRequested);
     on<DashboardRefreshRequested>(_onRefreshRequested);
     on<DashboardXpUpdated>(_onXpUpdated);
@@ -49,7 +47,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       final completedLessons = await progressService.getCompletedLessons();
 
       // Find next milestone (dynamic logic)
-      final nextMilestone = _findNextMilestone(completedLessons);
+      final nextMilestone = await _findNextMilestone(completedLessons);
 
       // Generate smart recommendations (always populate, even for new users)
       final recommendations = _generateRecommendations(completedLessons);
@@ -60,15 +58,17 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       // Calculate streak
       final streakData = await _calculateStreak();
 
-      emit(DashboardLoaded(
-        user: user,
-        nextMilestone: nextMilestone,
-        recommendedExercises: recommendations,
-        flashcardDecks: flashcardDecks,
-        currentStreak: streakData['streak'] as int,
-        lastStudyDate: streakData['lastDate'] as DateTime?,
-        displayedXP: user.exp,
-      ));
+      emit(
+        DashboardLoaded(
+          user: user,
+          nextMilestone: nextMilestone,
+          recommendedExercises: recommendations,
+          flashcardDecks: flashcardDecks,
+          currentStreak: streakData['streak'] as int,
+          lastStudyDate: streakData['lastDate'] as DateTime?,
+          displayedXP: user.exp,
+        ),
+      );
     } catch (e) {
       emit(DashboardError('Failed to load dashboard: ${e.toString()}'));
     }
@@ -136,9 +136,18 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   /// Find the next available milestone (dynamic logic)
-  RoadmapQuest? _findNextMilestone(List<String> completedLessons) {
+  Future<RoadmapQuest?> _findNextMilestone(
+    List<String> completedLessons,
+  ) async {
+    // Get current JLPT level from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final currentLevel = prefs.getString('current_jlpt_level') ?? 'N5';
+
+    // Get roadmap data for current level
+    final roadmapData = _getRoadmapDataForLevel(currentLevel);
+
     // Flatten all quests from all weeks
-    final allQuests = n5Weeks.expand((week) => week.quests).toList();
+    final allQuests = roadmapData.expand((week) => week.quests).toList();
 
     // Sort by ID to get the smallest order
     allQuests.sort((a, b) => a.id.compareTo(b.id));
@@ -152,6 +161,24 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
     // All quests completed
     return null;
+  }
+
+  /// Get roadmap data for a specific level
+  List<RoadmapWeek> _getRoadmapDataForLevel(String level) {
+    switch (level) {
+      case 'N5':
+        return n5Weeks;
+      case 'N4':
+        return n4Weeks;
+      case 'N3':
+        return n3Weeks;
+      case 'N2':
+        return n2Weeks;
+      case 'N1':
+        return n1Weeks;
+      default:
+        return n5Weeks;
+    }
   }
 
   /// Generate smart recommendations (Phase 1 algorithm)
@@ -196,10 +223,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       lastStudyDate = DateTime.parse(lastStudyDateStr);
     }
 
-    return {
-      'streak': streak,
-      'lastDate': lastStudyDate,
-    };
+    return {'streak': streak, 'lastDate': lastStudyDate};
   }
 
   /// Update streak after completing a lesson

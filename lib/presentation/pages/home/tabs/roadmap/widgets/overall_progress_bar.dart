@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/constants/app_colors.dart';
+import '../../../../../../domain/entities/roadmap_models.dart';
 import '../roadmap_utils.dart';
 
 /// Widget displaying the overall progress bar with gradient
 class OverallProgressBar extends StatelessWidget {
   final Set<String> completedQuestIds;
+  final List<RoadmapWeek> weeks;
 
   const OverallProgressBar({
     super.key,
     required this.completedQuestIds,
+    required this.weeks,
   });
 
   @override
   Widget build(BuildContext context) {
-    final totalQuests = RoadmapUtils.getTotalQuestCount();
-    final completedCount = RoadmapUtils.getCompletedQuestCount(completedQuestIds);
+    final totalQuests = RoadmapUtils.getTotalQuestCount(weeks);
+    final completedCount = RoadmapUtils.getCompletedQuestCount(completedQuestIds, weeks);
     final percentage = totalQuests > 0 ? completedCount / totalQuests : 0.0;
 
     return Container(

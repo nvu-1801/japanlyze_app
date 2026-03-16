@@ -11,6 +11,7 @@ class QuestCard extends StatefulWidget {
   final Set<String> completedQuestIds;
   final double progress; // 0.0 to 1.0
   final VoidCallback onTap;
+  final List<RoadmapWeek> weeks;
 
   const QuestCard({
     super.key,
@@ -19,6 +20,7 @@ class QuestCard extends StatefulWidget {
     required this.completedQuestIds,
     required this.onTap,
     this.progress = 0.0,
+    required this.weeks,
   });
 
   @override
@@ -31,7 +33,7 @@ class _QuestCardState extends State<QuestCard> {
   @override
   Widget build(BuildContext context) {
     final isDone = widget.completedQuestIds.contains(widget.quest.id);
-    final isLocked = RoadmapUtils.isQuestLocked(widget.quest, widget.completedQuestIds);
+    final isLocked = RoadmapUtils.isQuestLocked(widget.quest, widget.completedQuestIds, widget.weeks);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
