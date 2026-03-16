@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../../core/constants/app_colors.dart';
+import '../../../../../../domain/entities/roadmap_models.dart';
 import '../roadmap_utils.dart';
 
 /// Widget displaying the overall progress badge with percentage and count
 class OverallProgressBadge extends StatelessWidget {
   final Set<String> completedQuestIds;
   final bool isLoading;
+  final List<RoadmapWeek> weeks;
 
   const OverallProgressBadge({
     super.key,
     required this.completedQuestIds,
     required this.isLoading,
+    required this.weeks,
   });
 
   @override
@@ -24,8 +27,8 @@ class OverallProgressBadge extends StatelessWidget {
       );
     }
 
-    final totalQuests = RoadmapUtils.getTotalQuestCount();
-    final completedCount = RoadmapUtils.getCompletedQuestCount(completedQuestIds);
+    final totalQuests = RoadmapUtils.getTotalQuestCount(weeks);
+    final completedCount = RoadmapUtils.getCompletedQuestCount(completedQuestIds, weeks);
     final percentage = RoadmapUtils.calculateProgress(completedCount, totalQuests);
 
     return Column(

@@ -210,3 +210,131 @@ final List<RoadmapPhase> n5Phases = [
     ],
   ),
 ];
+
+// Data mẫu cho N4
+final List<RoadmapWeek> n4Weeks = [
+  const RoadmapWeek(
+    week: 1,
+    title: "Tuần 1: Ôn tập N5 + Từ vựng N4 cơ bản",
+    description: "Ôn lại kiến thức N5 và làm quen với từ vựng N4.",
+    color: Color(0xFFE3F2FD), // bg-blue-100
+    iconColor: Color(0xFF1565C0), // text-blue-600
+    badgeColor: Color(0xFF2196F3), // bg-blue-500
+    quests: [
+      RoadmapQuest(
+        id: 'n4_w1_1',
+        title: "Ôn tập Hiragana/Katakana",
+        description: "Ôn lại bảng chữ cái cơ bản.",
+        type: "learn",
+        icon: Icons.book_outlined,
+        link: "/exercises/hiragana",
+        xp: 100,
+      ),
+      RoadmapQuest(
+        id: 'n4_w1_2',
+        title: "Từ vựng N4: Thiên nhiên",
+        description: "Học từ vựng về thiên nhiên và môi trường.",
+        type: "flashcard",
+        icon: Icons.eco_outlined,
+        link: "/exercises/nature",
+        xp: 150,
+      ),
+    ],
+  ),
+];
+
+// Data mẫu cho N3
+final List<RoadmapWeek> n3Weeks = [
+  const RoadmapWeek(
+    week: 1,
+    title: "Tuần 1: Ôn tập N4 + Ngữ pháp N3",
+    description: "Ôn lại N4 và học ngữ pháp N3 nâng cao.",
+    color: Color(0xFFF3E5F5), // bg-purple-100
+    iconColor: Color(0xFF6A1B9A), // text-purple-600
+    badgeColor: Color(0xFF9C27B0), // bg-purple-500
+    quests: [
+      RoadmapQuest(
+        id: 'n3_w1_1',
+        title: "Ôn tập ngữ pháp N4",
+        description: "Ôn lại các cấu trúc ngữ pháp N4.",
+        type: "learn",
+        icon: Icons.book_outlined,
+        link: "/exercises/grammar",
+        xp: 100,
+      ),
+      RoadmapQuest(
+        id: 'n3_w1_2',
+        title: "Ngữ pháp N3: Mệnh đề phức",
+        description: "Học cách sử dụng mệnh đề phức trong N3.",
+        type: "reading",
+        icon: Icons.article_outlined,
+        link: "/exercises/complex-sentences",
+        xp: 200,
+      ),
+    ],
+  ),
+];
+
+// Data mẫu cho N2
+final List<RoadmapWeek> n2Weeks = [
+  const RoadmapWeek(
+    week: 1,
+    title: "Tuần 1: Ôn tập N3 + Kanji N2",
+    description: "Ôn lại N3 và học Kanji N2 nâng cao.",
+    color: Color(0xFFFFF3E0), // bg-orange-100
+    iconColor: Color(0xFFE65100), // text-orange-600
+    badgeColor: Color(0xFFFF9800), // bg-orange-500
+    quests: [
+      RoadmapQuest(
+        id: 'n2_w1_1',
+        title: "Ôn tập Kanji N3",
+        description: "Ôn lại các Kanji N3 quan trọng.",
+        type: "learn",
+        icon: Icons.book_outlined,
+        link: "/exercises/kanji",
+        xp: 100,
+      ),
+      RoadmapQuest(
+        id: 'n2_w1_2',
+        title: "Kanji N2: Từ ghép",
+        description: "Học các từ ghép phức tạp trong N2.",
+        type: "flashcard",
+        icon: Icons.style_outlined,
+        link: "/exercises/compound-kanji",
+        xp: 250,
+      ),
+    ],
+  ),
+];
+
+// Data mẫu cho N1
+final List<RoadmapWeek> n1Weeks = [
+  const RoadmapWeek(
+    week: 1,
+    title: "Tuần 1: Ôn tập N2 + Ngữ pháp N1",
+    description: "Ôn lại N2 và học ngữ pháp N1 cao cấp.",
+    color: Color(0xFFFFEBEE), // bg-red-100
+    iconColor: Color(0xFFB71C1C), // text-red-600
+    badgeColor: Color(0xFFF44336), // bg-red-500
+    quests: [
+      RoadmapQuest(
+        id: 'n1_w1_1',
+        title: "Ôn tập ngữ pháp N2",
+        description: "Ôn lại các cấu trúc ngữ pháp N2 nâng cao.",
+        type: "learn",
+        icon: Icons.book_outlined,
+        link: "/exercises/advanced-grammar",
+        xp: 100,
+      ),
+      RoadmapQuest(
+        id: 'n1_w1_2',
+        title: "Ngữ pháp N1: Biểu đạt tinh tế",
+        description: "Học các cách biểu đạt tinh tế trong N1.",
+        type: "reading",
+        icon: Icons.psychology_outlined,
+        link: "/exercises/nuanced-expressions",
+        xp: 300,
+      ),
+    ],
+  ),
+];

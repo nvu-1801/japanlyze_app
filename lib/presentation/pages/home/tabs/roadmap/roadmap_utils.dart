@@ -41,8 +41,9 @@ class RoadmapUtils {
   static bool isQuestLocked(
     RoadmapQuest quest,
     Set<String> completedQuestIds,
+    List<RoadmapWeek> weeks,
   ) {
-    final allQuests = n5Weeks.expand((w) => w.quests).toList();
+    final allQuests = weeks.expand((w) => w.quests).toList();
     final index = allQuests.indexWhere((q) => q.id == quest.id);
 
     // Ensure the very first quest is always unlocked
@@ -59,26 +60,32 @@ class RoadmapUtils {
   }
 
   /// Gets the next available quest index
-  static int getNextAvailableQuestIndex(Set<String> completedQuestIds) {
-    final allQuests = n5Weeks.expand((w) => w.quests).toList();
+  static int getNextAvailableQuestIndex(
+    Set<String> completedQuestIds,
+    List<RoadmapWeek> weeks,
+  ) {
+    final allQuests = weeks.expand((w) => w.quests).toList();
     return allQuests.indexWhere(
       (q) => !completedQuestIds.contains(q.id),
     );
   }
 
   /// Gets total quest count
-  static int getTotalQuestCount() {
-    return n5Weeks.expand((w) => w.quests).length;
+  static int getTotalQuestCount(List<RoadmapWeek> weeks) {
+    return weeks.expand((w) => w.quests).length;
   }
 
   /// Gets all quest IDs in the roadmap
-  static Set<String> getAllQuestIds() {
-    return n5Weeks.expand((w) => w.quests).map((q) => q.id).toSet();
+  static Set<String> getAllQuestIds(List<RoadmapWeek> weeks) {
+    return weeks.expand((w) => w.quests).map((q) => q.id).toSet();
   }
 
   /// Gets completed quest count
-  static int getCompletedQuestCount(Set<String> completedQuestIds) {
-    final questIdsInRoadmap = getAllQuestIds();
+  static int getCompletedQuestCount(
+    Set<String> completedQuestIds,
+    List<RoadmapWeek> weeks,
+  ) {
+    final questIdsInRoadmap = getAllQuestIds(weeks);
     return completedQuestIds.intersection(questIdsInRoadmap).length;
   }
 }

@@ -11,6 +11,7 @@ class SteppingStonesRoadmap extends StatelessWidget {
   final Function(RoadmapQuest) onQuestTap;
   final Color primaryColor;
   final Color iconColor;
+  final List<RoadmapWeek> weeks;
 
   const SteppingStonesRoadmap({
     super.key,
@@ -20,6 +21,7 @@ class SteppingStonesRoadmap extends StatelessWidget {
     required this.onQuestTap,
     required this.primaryColor,
     required this.iconColor,
+    required this.weeks,
   });
 
   @override
@@ -32,7 +34,7 @@ class SteppingStonesRoadmap extends StatelessWidget {
         children: List.generate(quests.length, (index) {
           final quest = quests[index];
           final isDone = completedQuestIds.contains(quest.id);
-          final isLocked = RoadmapUtils.isQuestLocked(quest, completedQuestIds);
+          final isLocked = RoadmapUtils.isQuestLocked(quest, completedQuestIds, weeks);
           final isAvailable = !isLocked && !isDone;
           final progress = questProgress[quest.id] ?? 0.0;
           final isLast = index == quests.length - 1;
