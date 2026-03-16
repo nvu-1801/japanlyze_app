@@ -32,17 +32,17 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
   late AppinioSwiperController _swiperController;
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
-  
+
   List<FlashcardItem> _flashcards = [];
   int _currentIndex = 0;
   bool _isFlipped = false;
   bool _isLoading = true;
-  
+
   // Session tracking
   int _correctCount = 0;
   int _incorrectCount = 0;
   DateTime _sessionStart = DateTime.now();
-  
+
   late FlashcardRepository _flashcardRepository;
 
   @override
@@ -56,25 +56,25 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
     _flipAnimation = Tween<double>(begin: 0, end: pi).animate(
       CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
     );
-    
+
     _initializeFlashcards();
   }
 
   Future<void> _initializeFlashcards() async {
     final isar = IsarService.instance.isar;
     _flashcardRepository = FlashcardRepository(isar);
-    
+
     // Create flashcards from vocab if not exists
     await _flashcardRepository.createFlashcardsFromVocab(
       questId: widget.questId ?? widget.lesson.id,
       vocabItems: widget.lesson.vocabItems,
     );
-    
+
     // Get flashcards for this quest
     final cards = await _flashcardRepository.getFlashcardsForQuest(
       widget.questId ?? widget.lesson.id,
     );
-    
+
     if (mounted) {
       setState(() {
         _flashcards = cards;
@@ -104,32 +104,35 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
 
   void _onSwipe(bool remembered) async {
     if (_flashcards.isEmpty) return;
-    
+
     final currentCard = _flashcards[_currentIndex];
-    
+
     // Update SRS data
     await _flashcardRepository.updateFlashcardReview(
       cardId: currentCard.cardId,
       remembered: remembered,
     );
-    
+
     // Track session
     if (remembered) {
       _correctCount++;
     } else {
       _incorrectCount++;
     }
-    
+
     // Update progress
     if (widget.questId != null) {
       final progress = (_currentIndex + 1) / _flashcards.length;
-      await UserProgressService().updateQuestProgress(widget.questId!, progress);
+      await UserProgressService().updateQuestProgress(
+        widget.questId!,
+        progress,
+      );
       widget.onProgressUpdated?.call();
     }
-    
+
     // Haptic feedback
     HapticFeedback.mediumImpact();
-    
+
     // Move to next card or show summary
     if (_currentIndex < _flashcards.length - 1) {
       setState(() {
@@ -148,7 +151,7 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
     final duration = DateTime.now().difference(_sessionStart).inSeconds;
     final progress = _correctCount / total;
     final xpEarned = (_correctCount * 10).toInt();
-    
+
     // Save progress history
     final history = UserProgressHistory.create(
       historyId: '${widget.questId}_${DateTime.now().millisecondsSinceEpoch}',
@@ -163,14 +166,14 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
       xpEarned: xpEarned,
     );
     await _flashcardRepository.saveProgressHistory(history);
-    
+
     // Mark quest as completed if 80% mastery
     if (progress >= 0.8 && widget.questId != null) {
       await UserProgressService().markLessonAsCompleted(widget.questId!);
     }
-    
+
     if (!mounted) return;
-    
+
     showModalBottomSheet(
       context: context,
       isDismissible: false,
@@ -193,7 +196,9 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                progress >= 0.8 ? Icons.emoji_events_rounded : Icons.school_rounded,
+                progress >= 0.8
+                    ? Icons.emoji_events_rounded
+                    : Icons.school_rounded,
                 color: AppColors.primary,
                 size: 40,
               ),
@@ -311,11 +316,7 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.style_outlined,
-                size: 64,
-                color: Colors.grey[400],
-              ),
+              Icon(Icons.style_outlined, size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
               Text(
                 'Không có thẻ nào để học',
@@ -380,7 +381,7 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
                 ),
               ),
             ),
-            
+
             // Flashcard
             Expanded(
               child: Center(
@@ -421,7 +422,7 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
                 ),
               ),
             ),
-            
+
             // Swipe buttons
             Padding(
               padding: const EdgeInsets.all(24),
@@ -472,26 +473,16 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
             const SizedBox(height: 16),
             Text(
               card.kana,
-              style: GoogleFonts.lexend(
-                fontSize: 28,
-                color: Colors.grey[600],
-              ),
+              style: GoogleFonts.lexend(fontSize: 28, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
           const SizedBox(height: 32),
-          Icon(
-            Icons.touch_app_rounded,
-            size: 32,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.touch_app_rounded, size: 32, color: Colors.grey[400]),
           const SizedBox(height: 8),
           Text(
             'Chạm để lật thẻ',
-            style: GoogleFonts.lexend(
-              fontSize: 14,
-              color: Colors.grey[400],
-            ),
+            style: GoogleFonts.lexend(fontSize: 14, color: Colors.grey[400]),
           ),
         ],
       ),

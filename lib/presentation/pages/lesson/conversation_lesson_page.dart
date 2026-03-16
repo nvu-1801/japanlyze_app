@@ -9,7 +9,12 @@ class ConversationLessonPage extends StatefulWidget {
   final String? questId;
   final VoidCallback? onProgressUpdated;
 
-  const ConversationLessonPage({super.key, required this.lesson, this.questId, this.onProgressUpdated});
+  const ConversationLessonPage({
+    super.key,
+    required this.lesson,
+    this.questId,
+    this.onProgressUpdated,
+  });
 
   @override
   State<ConversationLessonPage> createState() => _ConversationLessonPageState();
@@ -27,7 +32,9 @@ class _ConversationLessonPageState extends State<ConversationLessonPage> {
 
   Future<void> _loadProgress() async {
     if (widget.questId != null) {
-      final progress = await UserProgressService().getQuestProgress(widget.questId!);
+      final progress = await UserProgressService().getQuestProgress(
+        widget.questId!,
+      );
       if (mounted) {
         setState(() {
           _progress = progress;
@@ -40,13 +47,13 @@ class _ConversationLessonPageState extends State<ConversationLessonPage> {
     final totalItems = widget.lesson.vocabItems.isNotEmpty
         ? widget.lesson.vocabItems.length
         : widget.lesson.lines.length;
-    
+
     if (totalItems > 0) {
       final newProgress = _completedItems.length / totalItems;
       setState(() {
         _progress = newProgress;
       });
-      
+
       if (widget.questId != null) {
         UserProgressService().updateQuestProgress(widget.questId!, newProgress);
         widget.onProgressUpdated?.call();
@@ -66,7 +73,10 @@ class _ConversationLessonPageState extends State<ConversationLessonPage> {
   }
 
   Future<void> _completeLesson(BuildContext context) async {
-    await UserProgressService().markMultipleAsCompleted([widget.questId, widget.lesson.id]);
+    await UserProgressService().markMultipleAsCompleted([
+      widget.questId,
+      widget.lesson.id,
+    ]);
     if (widget.questId != null) {
       await UserProgressService().updateQuestProgress(widget.questId!, 1.0);
     }
@@ -183,11 +193,7 @@ class _VocabCard extends StatelessWidget {
   final bool isCompleted;
   final VoidCallback? onTap;
 
-  const _VocabCard({
-    required this.item,
-    this.isCompleted = false,
-    this.onTap,
-  });
+  const _VocabCard({required this.item, this.isCompleted = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -206,8 +212,8 @@ class _VocabCard extends StatelessWidget {
             color: isCompleted
                 ? Colors.green.withValues(alpha: 0.3)
                 : (isDark
-                    ? Colors.white.withValues(alpha: 0.07)
-                    : Colors.black.withValues(alpha: 0.05)),
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.black.withValues(alpha: 0.05)),
           ),
           boxShadow: isDark
               ? []
@@ -281,8 +287,8 @@ class _VocabCard extends StatelessWidget {
                         color: isCompleted
                             ? Colors.green.withValues(alpha: 0.1)
                             : (isDark
-                                ? Colors.white.withValues(alpha: 0.06)
-                                : Colors.grey[100]),
+                                  ? Colors.white.withValues(alpha: 0.06)
+                                  : Colors.grey[100]),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -413,8 +419,8 @@ class _DialogueCardState extends State<_DialogueCard> {
             color: widget.isCompleted
                 ? Colors.green.withValues(alpha: 0.3)
                 : (isDark
-                    ? Colors.white.withValues(alpha: 0.07)
-                    : Colors.black.withValues(alpha: 0.05)),
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.black.withValues(alpha: 0.05)),
           ),
           boxShadow: isDark
               ? []
@@ -497,7 +503,8 @@ class _DialogueCardState extends State<_DialogueCard> {
                           final text = entry.value;
 
                           bool isSelected = _selectedIndex == index;
-                          bool isCorrectAnswer = index == line.correctOptionIndex;
+                          bool isCorrectAnswer =
+                              index == line.correctOptionIndex;
 
                           Color? bgColor;
                           Color? borderColor;
@@ -521,7 +528,9 @@ class _DialogueCardState extends State<_DialogueCard> {
                               borderColor = isDark
                                   ? Colors.white.withValues(alpha: 0.1)
                                   : Colors.grey[200];
-                              textColor = isDark ? Colors.white54 : Colors.grey[500]!;
+                              textColor = isDark
+                                  ? Colors.white54
+                                  : Colors.grey[500]!;
                             }
                           } else {
                             bgColor = isDark
@@ -559,7 +568,8 @@ class _DialogueCardState extends State<_DialogueCard> {
                                             color: textColor,
                                             fontWeight:
                                                 (_answered &&
-                                                    (isCorrectAnswer || isSelected))
+                                                    (isCorrectAnswer ||
+                                                        isSelected))
                                                 ? FontWeight.bold
                                                 : FontWeight.normal,
                                           ),

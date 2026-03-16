@@ -54,7 +54,9 @@ class _RoadmapTabState extends State<RoadmapTab> {
 
   int _calculateInitialWeekIndex() {
     // Tìm quest available gần nhất
-    final nextIndex = RoadmapUtils.getNextAvailableQuestIndex(_completedQuestIds);
+    final nextIndex = RoadmapUtils.getNextAvailableQuestIndex(
+      _completedQuestIds,
+    );
     if (nextIndex != -1) {
       final allQuests = n5Weeks.expand((w) => w.quests).toList();
       final quest = allQuests[nextIndex];
@@ -64,7 +66,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
         }
       }
     }
-    
+
     // Nếu không có, tìm week có completed quests gần nhất (từ cuối về đầu)
     for (int i = n5Weeks.length - 1; i >= 0; i--) {
       final weekQuests = n5Weeks[i].quests.map((q) => q.id).toSet();
@@ -72,7 +74,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
         return i;
       }
     }
-    
+
     return 0; // Default to week 1
   }
 
@@ -84,7 +86,9 @@ class _RoadmapTabState extends State<RoadmapTab> {
     RoadmapQuest targetQuest = quest;
 
     if (RoadmapUtils.isQuestLocked(quest, _completedQuestIds)) {
-      final targetIndex = RoadmapUtils.getNextAvailableQuestIndex(_completedQuestIds);
+      final targetIndex = RoadmapUtils.getNextAvailableQuestIndex(
+        _completedQuestIds,
+      );
       if (targetIndex != -1) {
         final allQuests = n5Weeks.expand((w) => w.quests).toList();
         targetQuest = allQuests[targetIndex];
@@ -104,7 +108,8 @@ class _RoadmapTabState extends State<RoadmapTab> {
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => _buildLessonPage(targetQuest, lessonData, _onProgressUpdated),
+          builder: (context) =>
+              _buildLessonPage(targetQuest, lessonData, _onProgressUpdated),
         ),
       );
       if (result == true) {
@@ -116,9 +121,17 @@ class _RoadmapTabState extends State<RoadmapTab> {
     }
   }
 
-  Widget _buildLessonPage(RoadmapQuest quest, dynamic lessonData, VoidCallback onProgressUpdated) {
+  Widget _buildLessonPage(
+    RoadmapQuest quest,
+    dynamic lessonData,
+    VoidCallback onProgressUpdated,
+  ) {
     if (quest.type == 'flashcard') {
-      return SRSFlashcardPage(lesson: lessonData, questId: quest.id, onProgressUpdated: onProgressUpdated);
+      return SRSFlashcardPage(
+        lesson: lessonData,
+        questId: quest.id,
+        onProgressUpdated: onProgressUpdated,
+      );
     }
     return ConversationLessonPage(
       lesson: lessonData,
@@ -228,10 +241,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
     return SliverToBoxAdapter(
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Row(
           children: n5Weeks.asMap().entries.map((entry) {
             return WeekTab(
@@ -251,10 +261,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
       sliver: SliverList(
         delegate: SliverChildListDelegate([
-          WeekHeader(
-            week: selectedWeek,
-            completedQuestIds: _completedQuestIds,
-          ),
+          WeekHeader(week: selectedWeek, completedQuestIds: _completedQuestIds),
           const SizedBox(height: 20),
           ...selectedWeek.quests.map(
             (quest) => QuestCard(
