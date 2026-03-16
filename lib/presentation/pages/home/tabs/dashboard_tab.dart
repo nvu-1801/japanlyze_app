@@ -530,14 +530,8 @@ class _DashboardTabState extends State<DashboardTab>
 
   /// Navigate to lesson based on quest type
   void _navigateToLesson(dynamic quest) {
-    // This would navigate to the appropriate lesson page
-    // For now, just show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đang mở: ${quest.title}'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    // Navigate to roadmap page
+    Navigator.pushNamed(context, '/roadmap');
   }
 }
 
