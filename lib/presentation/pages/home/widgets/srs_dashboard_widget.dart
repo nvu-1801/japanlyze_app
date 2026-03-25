@@ -50,7 +50,7 @@ class _SRSDashboardWidgetState extends State<SRSDashboardWidget> {
     }
 
     if (!mounted) return;
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => SRSFlashcardPage(
@@ -64,6 +64,7 @@ class _SRSDashboardWidgetState extends State<SRSDashboardWidget> {
         ),
       ),
     );
+    _loadCounts();
   }
 
   @override

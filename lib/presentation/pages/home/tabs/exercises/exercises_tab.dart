@@ -7,6 +7,7 @@ import 'widgets/exercise_card.dart';
 
 import '../../../../../../presentation/pages/lesson/conversation_lesson_page.dart';
 import '../../../../../../presentation/pages/lesson/flashcard_page.dart';
+import '../../../../../../presentation/pages/lesson/srs_flashcard_page.dart';
 import '../../../../../../data/services/user_progress_service.dart';
 
 /// Max items shown per category before collapsing
@@ -255,6 +256,37 @@ class _ExercisesTabState extends State<ExercisesTab> {
     }
   }
 
+  void _startQuickPractice() {
+    // Collect all unique vocab from all valid lessons
+    final allLessons = conversationData;
+    final allVocab = allLessons.expand((l) => l.vocabItems).toList();
+
+    if (allVocab.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không tìm thấy từ vựng để luyện tập.')),
+      );
+      return;
+    }
+
+    // Shuffle and pick a reasonable amount for a quick session (e.g. 30)
+    allVocab.shuffle();
+    final practiceVocab = allVocab.take(30).toList();
+
+    final practiceLesson = ConversationLesson(
+      id: 'quick_practice',
+      title: 'Luyện tập nhanh',
+      description: 'Luyện tập ngẫu nhiên từ vựng từ tất cả các chủ đề.',
+      vocabItems: practiceVocab,
+    );
+
+    _pushLessonPage(
+      SRSFlashcardPage(
+        lesson: practiceLesson,
+        title: 'Luyện tập nhanh từ vựng',
+      ),
+    );
+  }
+
   Widget _buildLessonCard(LessonItem lesson) {
     final isCompleted = _completedLessons.contains(lesson.id);
     final lockStatus = _checkLockStatus(lesson.id);
@@ -467,7 +499,9 @@ class _ExercisesTabState extends State<ExercisesTab> {
           ),
 
           // Intro banner
-          const SliverToBoxAdapter(child: _IntroBanner()),
+          SliverToBoxAdapter(
+            child: _IntroBanner(onQuickPractice: _startQuickPractice),
+          ),
 
           // Completed lessons
           SliverToBoxAdapter(
@@ -553,25 +587,31 @@ class _SectionWrapper extends StatelessWidget {
                   child: Icon(icon, color: iconColor, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.lexend(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppColors.textPrimary,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.lexend(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.lexend(
-                        fontSize: 11,
-                        color: isDark ? Colors.white38 : Colors.grey[500],
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.lexend(
+                          fontSize: 11,
+                          color: isDark ? Colors.white38 : Colors.grey[500],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -636,43 +676,35 @@ class _ExpandButton extends StatelessWidget {
 }
 
 class _IntroBanner extends StatelessWidget {
-  const _IntroBanner();
+  final VoidCallback onQuickPractice;
+  const _IntroBanner({required this.onQuickPractice});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withValues(alpha: 0.12),
-            AppColors.primary.withValues(alpha: 0.04),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        children: [
-          Text('🎌', style: const TextStyle(fontSize: 22)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Luyện tập theo chủ đề từ cơ bản đến nâng cao — từ Hiragana đến hội thoại thực tế.',
-              style: GoogleFonts.lexend(
-                fontSize: 13,
-                color: isDark
-                    ? Colors.white70
-                    : AppColors.textPrimary.withValues(alpha: 0.8),
-                height: 1.5,
-              ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: onQuickPractice,
+          icon: const Icon(Icons.bolt_rounded),
+          label: Text(
+            'Luyện tập nhanh từ vựng',
+            style: GoogleFonts.lexend(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ],
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
+          ),
+        ),
       ),
     );
   }

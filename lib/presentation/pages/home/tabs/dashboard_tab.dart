@@ -289,84 +289,98 @@ class _DashboardTabState extends State<DashboardTab>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, '/settings'),
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            width: 2,
-                          ),
-                          image: const DecorationImage(
-                            image: CachedNetworkImageProvider(
-                              'https://lh3.googleusercontent.com/aida-public/AB6AXuBvfCNi-OtMjt0XTS_NqGqEepWrcaCWyGvU4dJ6yIP0s_y4ZDK0wQ-pfw3BevDO-4nIXerfUwcFa-hXCBA7CV2hO4Y2amw5YNqVRiNU67CE0D-1vP4sGBkv_sAoGHQmcuAjqXAJYMZ6i2FCNFOnWOUrBpgxtxWxY7yhd3QzfMpeCD2pqhtiAtIhtwuASKkMosLZMoFwaaxuMoVFEgs6RWU8LmK6l_g2B9ueOIRaI4F5Cexd4cljTRv7whyKLTsI7JS3jUX1ODb4phvf',
+                Expanded(
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/settings'),
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              width: 2,
                             ),
-                            fit: BoxFit.cover,
+                            image: const DecorationImage(
+                              image: CachedNetworkImageProvider(
+                                'https://lh3.googleusercontent.com/aida-public/AB6AXuBvfCNi-OtMjt0XTS_NqGqEepWrcaCWyGvU4dJ6yIP0s_y4ZDK0wQ-pfw3BevDO-4nIXerfUwcFa-hXCBA7CV2hO4Y2amw5YNqVRiNU67CE0D-1vP4sGBkv_sAoGHQmcuAjqXAJYMZ6i2FCNFOnWOUrBpgxtxWxY7yhd3QzfMpeCD2pqhtiAtIhtwuASKkMosLZMoFwaaxuMoVFEgs6RWU8LmK6l_g2B9ueOIRaI4F5Cexd4cljTRv7whyKLTsI7JS3jUX1ODb4phvf',
+                              ),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Ohayou, ${state.user.name.split(' ').first}!',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Row(
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Level ${state.currentJlptLevel} Roadmap',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                              'Ohayou, ${state.user.name.split(' ').first}!',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: state.user.isPremium
-                                    ? Colors.amber.withValues(alpha: 0.1)
-                                    : AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: state.user.isPremium
-                                      ? Colors.amber.withValues(alpha: 0.3)
-                                      : AppColors.primary.withValues(
-                                          alpha: 0.3,
-                                        ),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    'Level ${state.currentJlptLevel} Roadmap',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                state.user.isPremium ? 'PREMIUM VIP' : 'BASIC',
-                                style: TextStyle(
-                                  color: state.user.isPremium
-                                      ? Colors.amber[800]
-                                      : AppColors.primary,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: state.user.isPremium
+                                        ? Colors.amber.withValues(alpha: 0.1)
+                                        : AppColors.primary.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: state.user.isPremium
+                                          ? Colors.amber.withValues(alpha: 0.3)
+                                          : AppColors.primary.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    state.user.isPremium
+                                        ? 'PREMIUM VIP'
+                                        : 'BASIC',
+                                    style: TextStyle(
+                                      color: state.user.isPremium
+                                          ? Colors.amber[800]
+                                          : AppColors.primary,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
                 Row(
                   children: [

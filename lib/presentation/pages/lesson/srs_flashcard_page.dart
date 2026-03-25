@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:appinio_swiper/appinio_swiper.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/repositories/flashcard_repository.dart';
 import '../../../data/services/isar_service.dart';
@@ -61,12 +60,10 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
   Color get _onSurface => _isDark ? midnightOnSurface : lightOnSurface;
   Color get _onSurfaceVariant =>
       _isDark ? midnightOnSurfaceVariant : lightOnSurfaceVariant;
-  late AppinioSwiperController _swiperController;
 
   List<FlashcardItem> _flashcards = [];
   int _currentIndex = 0;
   bool _isLoading = true;
-  bool _isTopCardFlipped = false;
 
   // Session tracking
   int _correctCount = 0;
@@ -78,8 +75,6 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
   @override
   void initState() {
     super.initState();
-    _swiperController = AppinioSwiperController();
-
     _initializeFlashcards();
   }
 
@@ -121,34 +116,17 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
     }
   }
 
-  @override
-  void dispose() {
-    _swiperController.dispose();
-    super.dispose();
-  }
-
-  FlashcardRating? _pendingRating;
   bool _isProcessing = false;
 
-  void _onReview(FlashcardRating rating, {bool isFromSwipe = false}) async {
+  void _onReview(FlashcardRating rating) async {
     if (_flashcards.isEmpty) return;
+    if (_currentIndex >= _flashcards.length) return;
+    if (_isProcessing) return;
 
-    // If it's a manual button click, guard it.
-    // If it's from a swipe gesture, let it pass to finish the work.
-    if (!isFromSwipe && _isProcessing) return;
-
-    if (!isFromSwipe) {
+    setState(() {
       _isProcessing = true;
-      _pendingRating = rating;
-      if (rating == FlashcardRating.hard) {
-        _swiperController.swipeLeft();
-      } else {
-        _swiperController.swipeRight();
-      }
-      return;
-    }
+    });
 
-    // Now we are in the onSwipeEnd callback (isFromSwipe == true)
     final currentCard = _flashcards[_currentIndex];
 
     // Update SRS data
@@ -164,31 +142,37 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
       _incorrectCount++;
     }
 
-    // Update progress
+    // Update progress in database
     final qId = widget.questId ?? widget.lesson?.id;
     if (qId != null) {
       final progress = (_currentIndex + 1) / _flashcards.length;
       await UserProgressService().updateQuestProgress(qId, progress);
-      widget.onProgressUpdated?.call();
     }
 
-    // Move to next card or show summary
+    // Always notify progress update (e.g., for dashboard counts)
+    widget.onProgressUpdated?.call();
+
+    // Animation transition to next card or summary
+    HapticFeedback.mediumImpact();
+
     if (_currentIndex < _flashcards.length - 1) {
-      HapticFeedback.mediumImpact();
       setState(() {
         _currentIndex++;
-        _isTopCardFlipped = false;
       });
     } else {
-      _showSummary();
+      _finalizeSession();
     }
 
-    // Unlock after a small delay
-    await Future.delayed(const Duration(milliseconds: 400));
-    _isProcessing = false;
+    // Brief cooldown to avoid double taps
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted) {
+      setState(() {
+        _isProcessing = false;
+      });
+    }
   }
 
-  Future<void> _showSummary() async {
+  Future<void> _finalizeSession() async {
     final total = _flashcards.length;
     final duration = DateTime.now().difference(_sessionStart).inSeconds;
     final progress = _correctCount / total;
@@ -216,123 +200,19 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
     }
 
     if (!mounted) return;
-
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                progress >= 0.8
-                    ? Icons.emoji_events_rounded
-                    : Icons.school_rounded,
-                color: AppColors.primary,
-                size: 40,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              progress >= 0.8 ? 'Hoàn thành xuất sắc! 🎉' : 'Kết quả luyện tập',
-              style: GoogleFonts.lexend(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Bạn đã thuộc $_correctCount/$total từ vựng trong bộ này.',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '+$xpEarned XP',
-              style: GoogleFonts.lexend(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      setState(() {
-                        _currentIndex = 0;
-                        _correctCount = 0;
-                        _incorrectCount = 0;
-                        _sessionStart = DateTime.now();
-                      });
-                      // Reset manually
-                      setState(() {
-                        _currentIndex = 0;
-                      });
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text('Học lại'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context, true);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text('Tiếp tục'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+    Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF9FAFB),
+        backgroundColor: _bg,
         appBar: AppBar(
-          backgroundColor: const Color(0xFFF9FAFB),
+          backgroundColor: _bg,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+            icon: Icon(Icons.arrow_back_ios, color: _onSurface),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -344,12 +224,12 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
 
     if (_flashcards.isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF9FAFB),
+        backgroundColor: _bg,
         appBar: AppBar(
-          backgroundColor: const Color(0xFFF9FAFB),
+          backgroundColor: _bg,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+            icon: Icon(Icons.arrow_back_ios, color: _onSurface),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -414,7 +294,7 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'JLPT N1 Flashcard',
+                        'JLPT Vocabulary SRS',
                         style: GoogleFonts.plusJakartaSans(
                           color: _primary,
                           fontSize: 10,
@@ -462,43 +342,31 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
               ),
             ),
 
-            // Flashcard Swiper
+            // Flashcard Transition
             Expanded(
-              child: AppinioSwiper(
-                controller: _swiperController,
-                cardCount: _flashcards.length,
-                onSwipeEnd: (previousIndex, targetIndex, activity) {
-                  final direction = activity.direction;
-                  FlashcardRating rating;
-
-                  if (_pendingRating != null) {
-                    rating = _pendingRating!;
-                    _pendingRating = null;
-                  } else {
-                    rating = direction == AxisDirection.left
-                        ? FlashcardRating.hard
-                        : FlashcardRating.good;
-                  }
-
-                  _onReview(rating, isFromSwipe: true);
-                },
-                cardBuilder: (context, index) {
-                  // HIDE cards behind the current one if it's flipped
-                  if (index > _currentIndex && _isTopCardFlipped) {
-                    return const SizedBox.shrink();
-                  }
-
-                  final card = _flashcards[index];
-                  return _SrsFlashcardItem(
-                    card: card,
-                    isDark: _isDark,
-                    onReview: (rating) => _onReview(rating),
-                    isTop: index == _currentIndex,
-                    onFlipChanged: (flipped) {
-                      setState(() => _isTopCardFlipped = flipped);
-                    },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.2, 0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
                   );
                 },
+                child: _currentIndex < _flashcards.length
+                    ? _SrsFlashcardItem(
+                        key: ValueKey(_flashcards[_currentIndex].cardId),
+                        card: _flashcards[_currentIndex],
+                        isDark: _isDark,
+                        onReview: _onReview,
+                        isTop: true,
+                      )
+                    : const SizedBox.shrink(),
               ),
             ),
 
@@ -595,14 +463,13 @@ class _SrsFlashcardItem extends StatefulWidget {
   final bool isDark;
   final Function(FlashcardRating) onReview;
   final bool isTop;
-  final Function(bool)? onFlipChanged;
 
   const _SrsFlashcardItem({
+    super.key,
     required this.card,
     required this.isDark,
     required this.onReview,
     required this.isTop,
-    this.onFlipChanged,
   });
 
   @override
@@ -637,7 +504,6 @@ class _SrsFlashcardItemState extends State<_SrsFlashcardItem>
     if (!widget.isTop) return;
     setState(() {
       _isFlipped = !_isFlipped;
-      widget.onFlipChanged?.call(_isFlipped);
       if (_isFlipped) {
         _flipController.forward();
         HapticFeedback.lightImpact();
@@ -852,8 +718,8 @@ class _SrsFlashcardItemState extends State<_SrsFlashcardItem>
               children: [
                 Expanded(
                   child: _buildReviewButton(
-                    label: 'Hard',
-                    time: '1d',
+                    label: 'Khó',
+                    time: '< 15m',
                     color: Colors.red,
                     outline: outline,
                     onTap: () => widget.onReview(FlashcardRating.hard),
@@ -862,8 +728,8 @@ class _SrsFlashcardItemState extends State<_SrsFlashcardItem>
                 const SizedBox(width: 8),
                 Expanded(
                   child: _buildReviewButton(
-                    label: 'Good',
-                    time: '3d',
+                    label: 'Tốt',
+                    time: '< 5h',
                     color: primary,
                     outline: outline,
                     onTap: () => widget.onReview(FlashcardRating.good),
@@ -872,8 +738,8 @@ class _SrsFlashcardItemState extends State<_SrsFlashcardItem>
                 const SizedBox(width: 8),
                 Expanded(
                   child: _buildReviewButton(
-                    label: 'Easy',
-                    time: '7d',
+                    label: 'Dễ',
+                    time: '1d+',
                     color: Colors.green,
                     outline: outline,
                     onTap: () => widget.onReview(FlashcardRating.easy),

@@ -497,87 +497,24 @@ class _ReadingPageState extends State<ReadingPage> {
   }
 
   Widget _buildChallengeHeader() {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6366f1), Color(0xFFa855f7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      child: ElevatedButton.icon(
+        onPressed: _showLevelSelection,
+        icon: const Icon(Icons.bolt_rounded),
+        label: Text(
+          'Luyện đọc nhanh',
+          style: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.bold),
         ),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6366f1).withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(Icons.bolt_rounded, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CHALLENGE MODE',
-                      style: GoogleFonts.lexend(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    Text(
-                      'Luyện đọc ngẫu nhiên',
-                      style: GoogleFonts.lexend(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _showLevelSelection,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF6366f1),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                'Bắt đầu ngay',
-                style: GoogleFonts.lexend(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
+          elevation: 0,
+        ),
       ),
     );
   }
