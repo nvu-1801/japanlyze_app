@@ -19,54 +19,38 @@ class WeekTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final selectedBg = isDark ? const Color(0xFF5DAC5B) : const Color(0xFF1B6D24);
+    final unselectedBg = isDark ? Colors.grey[800] : const Color(0xFFE6E9E7); // surface-container-high
+    final selectedText = Colors.white;
+    final unselectedText = isDark ? Colors.grey[400] : const Color(0xFF3F4A3C); // on-surface-variant
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? iconColor
-              : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected
-                ? Colors.transparent
-                : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200]!),
-          ),
+          color: isSelected ? selectedBg : unselectedBg,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: iconColor.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ]
               : [],
         ),
-        child: Column(
-          children: [
-            Text(
-              '$weekNumber',
-              style: GoogleFonts.lexend(
-                fontWeight: FontWeight.w900,
-                fontSize: 14,
-                color: isSelected ? Colors.white : Colors.grey[600],
-              ),
-            ),
-            Text(
-              'Tuần',
-              style: GoogleFonts.lexend(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? Colors.white.withValues(alpha: 0.8)
-                    : Colors.grey[400],
-              ),
-            ),
-          ],
+        child: Text(
+          'Tuần $weekNumber',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: isSelected ? selectedText : unselectedText,
+          ),
         ),
       ),
     );

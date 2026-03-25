@@ -17,83 +17,95 @@ class WeekHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final weekQuestIds = week.quests.map((q) => q.id).toSet();
-    final completedCount = completedQuestIds.intersection(weekQuestIds).length;
-    final totalCount = week.quests.length;
-    final percentage = RoadmapUtils.calculateProgress(completedCount, totalCount);
+    final primaryColor = isDark ? const Color(0xFF5DAC5B) : const Color(0xFF1B6D24);
+    final primaryContainer = isDark ? const Color(0xFF1B6D24) : const Color(0xFF5DAC5B);
+    final onPrimary = Colors.white;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: week.color.withValues(alpha: isDark ? 0.1 : 1.0),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [primaryColor, primaryContainer],
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: week.iconColor.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: Row(
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: week.iconColor,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: week.iconColor.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.calendar_today,
-              color: Colors.white,
-              size: 24,
+          Positioned(
+            right: -40,
+            bottom: -50,
+            child: Opacity(
+              opacity: 0.2,
+              child: Icon(
+                Icons.translate,
+                size: 160,
+                color: onPrimary,
+              ),
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  week.title,
-                  style: GoogleFonts.lexend(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                    color: isDark ? Colors.white : Colors.blueGrey[800],
-                  ),
-                ),
-                Text(
-                  week.description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white70 : Colors.grey[600],
-                    height: 1.4,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '$percentage%',
-                style: GoogleFonts.lexend(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 20,
-                  color: week.iconColor,
+                'Tuần ${week.week}: ${week.title}',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 24,
+                  color: onPrimary,
                 ),
               ),
+              const SizedBox(height: 8),
               Text(
-                '$completedCount/$totalCount',
-                style: GoogleFonts.lexend(
-                  fontSize: 11,
-                  color: Colors.grey[500],
+                week.description,
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  color: onPrimary.withOpacity(0.8),
+                  height: 1.5,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: primaryColor, width: 2),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.group,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'HƠN 1.2K HỌC VIÊN ĐANG HỌC',
+                    style: GoogleFonts.manrope(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: onPrimary.withOpacity(0.9),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
