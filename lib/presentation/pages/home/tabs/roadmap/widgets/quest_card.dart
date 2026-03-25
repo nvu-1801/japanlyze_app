@@ -36,6 +36,32 @@ class _QuestCardState extends State<QuestCard> {
     final isLocked = RoadmapUtils.isQuestLocked(widget.quest, widget.completedQuestIds, widget.weeks);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final primaryColor = isDark ? const Color(0xFF5DAC5B) : const Color(0xFF1B6D24);
+    final primaryFixedColor = isDark ? const Color(0xFF1B6D24) : const Color(0xFFA3F69C);
+    
+    Color bgColor = isDark ? Colors.grey[850]! : Colors.white;
+    Color borderColor = primaryColor.withOpacity(0.2);
+    Color iconBgColor = primaryFixedColor;
+    Color iconColor = isDark ? Colors.white : primaryColor;
+    Color titleColor = isDark ? Colors.white : const Color(0xFF191C1B);
+    Color subtitleColor = isDark ? Colors.grey[400]! : const Color(0xFF3F4A3C);
+    
+    if (isLocked) {
+      bgColor = isDark ? Colors.grey[900]! : const Color(0xFFF2F4F2).withOpacity(0.5);
+      borderColor = Colors.transparent;
+      iconBgColor = isDark ? Colors.grey[800]! : const Color(0xFFE1E3E1);
+      iconColor = isDark ? Colors.grey[500]! : const Color(0xFF3F4A3C);
+      titleColor = isDark ? Colors.grey[500]! : const Color(0xFF3F4A3C);
+      subtitleColor = titleColor.withOpacity(0.6);
+    } else if (isDone) {
+      bgColor = isDark ? Colors.grey[850]! : const Color(0xFFF8FAF8);
+      borderColor = isDark ? Colors.grey[800]! : const Color(0xFFBECAB9).withOpacity(0.5);
+      iconBgColor = isDark ? Colors.green[900]!.withOpacity(0.3) : Colors.green[50]!;
+      iconColor = isDark ? Colors.green[400]! : Colors.green[700]!;
+      titleColor = isDark ? Colors.grey[300]! : const Color(0xFF191C1B).withOpacity(0.8);
+      subtitleColor = isDark ? Colors.grey[500]! : const Color(0xFF3F4A3C).withOpacity(0.8);
+    }
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) => setState(() => _isPressed = false),
@@ -50,156 +76,141 @@ class _QuestCardState extends State<QuestCard> {
         scale: _isPressed ? 0.98 : 1.0,
         duration: const Duration(milliseconds: 100),
         child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: isLocked
-                ? (isDark ? Colors.grey[900] : Colors.grey[50])
-                : Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDone
-                  ? Colors.green.withValues(alpha: 0.3)
-                  : (isDark ? Colors.grey[800]! : Colors.grey[100]!),
-              width: 1,
-            ),
-            boxShadow: [
-              if (!isLocked)
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-            ],
+            color: bgColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: borderColor, width: 1),
+            boxShadow: (!isLocked && !isDone)
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF191C1B).withOpacity(0.04),
+                      blurRadius: 32,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : [],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      width: 56,
+                      height: 56,
                       decoration: BoxDecoration(
-                        color: isLocked
-                            ? (isDark ? Colors.grey[800] : Colors.grey[200])
-                            : widget.week.color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(14),
+                        color: iconBgColor,
+                        shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        isLocked ? Icons.lock_rounded : widget.quest.icon,
-                        color: isLocked
-                            ? (isDark ? Colors.grey[600] : Colors.grey[400])
-                            : widget.week.iconColor,
-                        size: 24,
+                      child: Center(
+                        child: Icon(
+                          widget.quest.icon,
+                          color: iconColor,
+                          size: 28,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 20),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             widget.quest.title,
-                            style: GoogleFonts.lexend(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: isLocked
-                                  ? (isDark
-                                        ? Colors.grey[600]
-                                        : Colors.grey[400])
-                                  : (isDark ? Colors.white : Colors.grey[800]),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                              color: titleColor,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Text(
-                                isLocked
-                                    ? 'Đang khóa'
-                                    : (isDone
-                                          ? 'Đã hoàn thành'
-                                          : 'Sẵn sàng học'),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isLocked
-                                      ? (isDark
-                                            ? Colors.grey[700]
-                                            : Colors.grey[400])
-                                      : (isDone
-                                            ? Colors.green
-                                            : Colors.grey[500]),
-                                  fontWeight: isDone
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                              if (!isLocked && widget.progress > 0) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: widget.week.color.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    '${(widget.progress * 100).toInt()}%',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: widget.week.iconColor,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
+                          Text(
+                            _getSubtitleForQuest(widget.quest),
+                            style: GoogleFonts.manrope(
+                              fontSize: 14,
+                              color: subtitleColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                          if (!isLocked && !isDone && widget.progress > 0) ...[
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: LinearProgressIndicator(
+                                value: widget.progress,
+                                backgroundColor: isDark
+                                    ? Colors.grey[800]
+                                    : Colors.grey[200],
+                                valueColor: AlwaysStoppedAnimation(primaryColor),
+                                minHeight: 4,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
-                    if (isLocked)
-                      Icon(
-                        Icons.lock_outline_rounded,
-                        color: isDark ? Colors.grey[800] : Colors.grey[200],
-                        size: 20,
-                      )
-                    else if (isDone)
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        color: Colors.green,
-                        size: 22,
-                      )
-                    else
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: isDark ? Colors.grey[700] : Colors.grey[300],
-                        size: 22,
-                      ),
                   ],
                 ),
-                if (!isLocked && !isDone && widget.progress > 0) ...[
-                  const SizedBox(height: 16),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(3),
-                    child: LinearProgressIndicator(
-                      value: widget.progress,
-                      backgroundColor: isDark
-                          ? Colors.grey[800]
-                          : Colors.grey[100],
-                      valueColor: AlwaysStoppedAnimation(widget.week.iconColor),
-                      minHeight: 6,
+              ),
+              const SizedBox(width: 16),
+              if (isLocked)
+                Icon(
+                  Icons.lock_rounded,
+                  color: isDark ? Colors.grey[700] : const Color(0xFF3F4A3C).withOpacity(0.4),
+                  size: 24,
+                )
+              else if (isDone)
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: iconColor,
+                  size: 28,
+                )
+              else
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'BẮT ĐẦU',
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        color: primaryColor,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                ],
-              ],
-            ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: primaryColor,
+                      size: 24,
+                    ),
+                  ],
+                ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  String _getSubtitleForQuest(RoadmapQuest quest) {
+    switch (quest.type) {
+      case 'conversation':
+        return 'Hội thoại giao tiếp';
+      case 'flashcard':
+        return 'Thẻ nhớ từ vựng';
+      case 'grammar':
+        return 'Ngữ pháp cơ bản';
+      case 'kanji':
+        return 'Hán tự cốt lõi';
+      case 'exam':
+        return 'Kiểm tra năng lực';
+      default:
+        return 'Nhiệm vụ học tập';
+    }
   }
 }

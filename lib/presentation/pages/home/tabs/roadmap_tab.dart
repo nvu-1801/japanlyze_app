@@ -282,7 +282,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
 
   Widget _buildSliverAppBar(bool isDark) {
     return SliverAppBar(
-      expandedHeight: 180,
+      expandedHeight: 270,
       floating: false,
       pinned: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -296,42 +296,36 @@ class _RoadmapTabState extends State<RoadmapTab> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Row(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Lộ trình ',
-                          style: GoogleFonts.lexend(
-                            color: isDark
-                                ? Colors.white
-                                : AppColors.textPrimary,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 24,
+                          'LỘ TRÌNH HỌC TẬP',
+                          style: GoogleFonts.manrope(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.5,
+                            color: isDark ? Colors.grey[400] : const Color(0xFF3F4A3C),
                           ),
                         ),
-                        _buildJlptLevelDropdown(isDark),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Lộ trình',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: isDark ? Colors.white : const Color(0xFF191C1B),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 30,
+                          ),
+                        ),
                       ],
                     ),
-                    OverallProgressBadge(
-                      completedQuestIds: _completedQuestIds,
-                      isLoading: _isLoadingProgress,
-                      weeks: _currentWeeks,
-                    ),
+                    _buildJlptLevelDropdown(isDark),
                   ],
                 ),
-                const SizedBox(height: 12),
-                OverallProgressBar(
-                  completedQuestIds: _completedQuestIds,
-                  weeks: _currentWeeks,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '11 tuần · Từ Zero đến Hero',
-                  style: GoogleFonts.lexend(
-                    fontSize: 12,
-                    color: isDark ? Colors.white54 : Colors.grey[500],
-                  ),
-                ),
+                const SizedBox(height: 24),
+                _buildProgressCard(isDark),
               ],
             ),
           ),
@@ -342,38 +336,141 @@ class _RoadmapTabState extends State<RoadmapTab> {
     );
   }
 
-  Widget _buildJlptLevelDropdown(bool isDark) {
+  Widget _buildProgressCard(bool isDark) {
+    if (_isLoadingProgress) {
+      return const SizedBox(
+        height: 120,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    final totalQuests = RoadmapUtils.getTotalQuestCount(_currentWeeks);
+    final completedCount = RoadmapUtils.getCompletedQuestCount(_completedQuestIds, _currentWeeks);
+    final percentageInt = RoadmapUtils.calculateProgress(completedCount, totalQuests);
+    final percentageDouble = totalQuests > 0 ? completedCount / totalQuests : 0.0;
+
+    final bgColor = isDark ? Colors.grey[850] : const Color(0xFFF2F4F2);
+    final borderColor = isDark ? Colors.grey[800]! : const Color(0xFFBECAB9).withOpacity(0.15);
+    final primaryColor = isDark ? const Color(0xFF5DAC5B) : const Color(0xFF1B6D24);
+    final tertiaryColor = isDark ? Colors.blue[300]! : const Color(0xFF0061A4);
+    final tertiaryFixedColor = isDark ? Colors.blue[900]! : const Color(0xFFD1E4FF);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: borderColor, width: 1),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$percentageInt%',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      color: primaryColor,
+                      height: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$completedCount/$totalQuests nhiệm vụ hoàn thành',
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.grey[400] : const Color(0xFF3F4A3C),
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: tertiaryColor.withOpacity(0.2),
+                    width: 4,
+                  ),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.flag,
+                    color: tertiaryColor,
+                    size: 32,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            height: 12,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: tertiaryFixedColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: percentageDouble.clamp(0.01, 1.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: tertiaryColor,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJlptLevelDropdown(bool isDark) {
+    final bgColor = isDark ? Colors.grey[850] : const Color(0xFFF2F4F2);
+    final borderColor = isDark ? Colors.grey[800]! : const Color(0xFFBECAB9).withOpacity(0.15);
+    final textColor = isDark ? Colors.white : const Color(0xFF191C1B);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedJlptLevel,
-          icon: Icon(
-            Icons.keyboard_arrow_down,
-            color: AppColors.primary,
-            size: 20,
+          icon: Padding(
+            padding: const EdgeInsets.only(left: 4.0),
+            child: Icon(
+              Icons.expand_more,
+              color: textColor,
+              size: 20,
+            ),
           ),
-          style: GoogleFonts.lexend(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w900,
-            fontSize: 24,
+          isDense: true,
+          style: GoogleFonts.manrope(
+            color: textColor,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
-          dropdownColor: isDark ? Colors.grey[800] : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          dropdownColor: bgColor,
+          borderRadius: BorderRadius.circular(16),
           items: _jlptLevels.map((String level) {
             return DropdownMenuItem<String>(
               value: level,
               child: Text(
-                level,
-                style: GoogleFonts.lexend(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 24,
+                'Level $level',
+                style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             );
@@ -418,7 +515,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
       sliver: SliverList(
         delegate: SliverChildListDelegate([
           WeekHeader(week: selectedWeek, completedQuestIds: _completedQuestIds),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           ...selectedWeek.quests.map(
             (quest) => QuestCard(
               quest: quest,
@@ -434,3 +531,4 @@ class _RoadmapTabState extends State<RoadmapTab> {
     );
   }
 }
+
