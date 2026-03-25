@@ -497,87 +497,24 @@ class _ReadingPageState extends State<ReadingPage> {
   }
 
   Widget _buildChallengeHeader() {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6366f1), Color(0xFFa855f7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      child: ElevatedButton.icon(
+        onPressed: _showLevelSelection,
+        icon: const Icon(Icons.bolt_rounded),
+        label: Text(
+          'Luyện đọc nhanh',
+          style: GoogleFonts.lexend(fontSize: 15, fontWeight: FontWeight.bold),
         ),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6366f1).withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(Icons.bolt_rounded, color: Colors.white),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CHALLENGE MODE',
-                      style: GoogleFonts.lexend(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    Text(
-                      'Luyện đọc ngẫu nhiên',
-                      style: GoogleFonts.lexend(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _showLevelSelection,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF6366f1),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                'Bắt đầu ngay',
-                style: GoogleFonts.lexend(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
+          elevation: 0,
+        ),
       ),
     );
   }
@@ -773,6 +710,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   String? _aiFeedback;
   String? _aiDetails;
   DateTime? _startTime;
+  bool _isHolding = false; // Tracks if the user is holding the mic button
 
   // Visualizer simulation
   List<double> _audioBars = List.generate(20, (_) => 10.0);
@@ -802,8 +740,22 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     try {
       _speechEnabled = await _speechToText.initialize(
         onStatus: (status) {
+          debugPrint('STT Status: $status, isHolding: $_isHolding');
+
+          // FIX 1 & Auto-Restart:
           if (status == 'done' || status == 'notListening') {
-            if (mounted) setState(() => _isListening = false);
+            if (_isHolding) {
+              // Platform stopped prematurely but user still holding -> RESTART
+              debugPrint('STT platform auto-stop detected, restarting...');
+              _startListening(isAutoRestart: true);
+            } else if (_isListening) {
+              // Normal stop or timeout when not holding (e.g. initial timeout fix)
+              _stopListening();
+            } else {
+              if (mounted) {
+                setState(() => _isListening = false);
+              }
+            }
           }
         },
         onError: (e) => debugPrint('STT Error: $e'),
@@ -817,6 +769,8 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   @override
   void dispose() {
     _tts.stop();
+    // FIX 2: Huỷ STT khi navigate ra ngoài để tránh chạy ngầm
+    _speechToText.cancel();
     _pageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -938,6 +892,17 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     setState(() => _fetchingNext = true);
     try {
       if (widget.isChallenge) {
+        // FIX 3: Reset _isEvaluating khi chuyển bài để tránh UI lock
+        if (mounted) {
+          setState(() {
+            _isEvaluating = false;
+            _isListening = false;
+            _score = null;
+            _aiFeedback = null;
+            _aiDetails = null;
+            _lastWords = '';
+          });
+        }
         await _fetchTrulyRandomSnippet();
       } else {
         final randoms = await _ds.getRandomReadingArticles();
@@ -957,6 +922,9 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
             _aiFeedback = null;
             _aiDetails = null;
             _lastWords = '';
+            // FIX 3: Reset evaluating state khi sang bài mới
+            _isEvaluating = false;
+            _isListening = false;
           });
           if (_pageController.hasClients) {
             _pageController.jumpToPage(0);
@@ -1028,15 +996,29 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     }
   }
 
-  void _startListening() async {
+  void _startListening({bool isAutoRestart = false}) async {
     if (!_speechEnabled) return;
-    setResult(null);
-    setState(() {
-      _lastWords = "";
-      _isListening = true;
-      _startTime = DateTime.now();
-    });
-    await _speechToText.listen(onResult: _onSpeechResult, localeId: 'ja-JP');
+    if (!isAutoRestart) {
+      setResult(null);
+      setState(() {
+        _lastWords = "";
+        _isListening = true;
+        _isHolding = true; // User started holding
+        _startTime = DateTime.now();
+      });
+    } else {
+      // On auto-restart, we just ensure _isListening is true but keep existing transcribed text
+      if (mounted) {
+        setState(() => _isListening = true);
+      }
+    }
+
+    await _speechToText.listen(
+      onResult: _onSpeechResult,
+      localeId: 'ja-JP',
+      listenFor: const Duration(hours: 1), // không giới hạn thực tế
+      pauseFor: const Duration(hours: 1), // không tự dừng khi im lặng
+    );
     _animateBars();
   }
 
@@ -1049,6 +1031,9 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   }
 
   void _stopListening() async {
+    if (_isHolding) {
+      setState(() => _isHolding = false); // User released the button
+    }
     await _speechToText.stop();
     final durationMs = _startTime != null
         ? DateTime.now().difference(_startTime!).inMilliseconds
@@ -1630,77 +1615,114 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
               ),
               const SizedBox(width: 12),
               // Mic Button (Primary)
+              // FIX 4: Disabled state khi !_speechEnabled
               Expanded(
-                child: GestureDetector(
-                  onLongPressStart: (_) => _startListening(),
-                  onLongPressEnd: (_) => _stopListening(),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF6366f1), Color(0xFFa855f7)],
-                      ),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6366f1).withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (_isListening)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: _audioBars
-                                .map(
-                                  (h) => Container(
-                                    width: 3,
-                                    height: h,
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 1.5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                      borderRadius: BorderRadius.circular(1.5),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
+                child: !_speechEnabled
+                    ? Tooltip(
+                        message:
+                            'Microphone không khả dụng. Kiểm tra quyền truy cập mic.',
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(28),
                           ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _isListening
-                                  ? Icons.stop_rounded
-                                  : Icons.mic_rounded,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            if (!_isListening) ...[
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.mic_off_rounded,
+                                color: Colors.grey[500],
+                                size: 24,
+                              ),
                               const SizedBox(width: 8),
                               Text(
-                                'NHẤN GIỮ',
+                                'MIC KHÔNG KHẢ DỤNG',
                                 style: GoogleFonts.lexend(
-                                  color: Colors.white,
+                                  color: Colors.grey[500],
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
-                          ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
+                      )
+                    : GestureDetector(
+                        onLongPressStart: (_) => _startListening(),
+                        onLongPressEnd: (_) => _stopListening(),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          height: 56,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6366f1), Color(0xFFa855f7)],
+                            ),
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF6366f1,
+                                ).withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              if (_isListening)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: _audioBars
+                                      .map(
+                                        (h) => Container(
+                                          width: 3,
+                                          height: h,
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 1.5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.5,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              1.5,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _isListening
+                                        ? Icons.stop_rounded
+                                        : Icons.mic_rounded,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                  if (!_isListening) ...[
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'NHẤN GIỮ',
+                                      style: GoogleFonts.lexend(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
               ),
             ],
           ),

@@ -1,13 +1,16 @@
+import 'dart:math' as math;
 import 'package:isar/isar.dart';
 
 part 'flashcard_models.g.dart';
 
 /// Spaced Repetition System (SRS) levels
-enum SRSLevel {
-  newCard,
-  learning,
-  review,
-  relearning,
+enum SRSLevel { newCard, learning, review, relearning }
+
+/// Review quality ratings for SRS
+enum FlashcardRating {
+  hard, // 10-15 minutes
+  good, // 3-5 hours
+  easy, // 1 day
 }
 
 /// Flashcard item with SRS metadata
@@ -64,6 +67,9 @@ class FlashcardItem {
   /// Last review date
   DateTime? lastReviewDate;
 
+  /// Last review rating index
+  int? lastRatingIndex;
+
   /// Number of times reviewed correctly
   late int correctCount;
 
@@ -116,52 +122,68 @@ class FlashcardItem {
       ..updatedAt = now;
   }
 
-  /// Update SRS data based on review result (true = remembered, false = forgotten)
-  void updateSRS(bool remembered) {
+  /// Update SRS data based on review result
+  void updateSRS(FlashcardRating rating) {
     final now = DateTime.now();
     lastReviewDate = now;
+    lastRatingIndex = rating.index;
     updatedAt = now;
 
-    if (remembered) {
-      correctCount++;
-      repetitions++;
+    // Use a bit of randomness for intervals to avoid many cards being due at once
+    final random = math.Random();
 
-      // SM-2 Algorithm simplified
-      if (repetitions == 1) {
-        interval = 1;
-      } else if (repetitions == 2) {
-        interval = 6;
-      } else {
-        interval = (interval * easeFactor).round();
-      }
+    switch (rating) {
+      case FlashcardRating.hard:
+        incorrectCount++;
+        repetitions = 0;
+        // Khó: 10-15 phút
+        final minutes = 10 + random.nextInt(6);
+        nextReviewDate = now.add(Duration(minutes: minutes));
+        interval = 0; // Not in days yet
+        easeFactor = easeFactor - 0.2;
+        srsLevel = SRSLevel.learning;
+        isMastered = false;
+        break;
 
-      // Update ease factor
-      easeFactor = easeFactor + (0.1 - (5 - 3) * (0.08 + (5 - 3) * 0.02));
-      if (easeFactor < 1.3) easeFactor = 1.3;
+      case FlashcardRating.good:
+        correctCount++;
+        repetitions++;
+        // Tốt: 3-5 giờ
+        final hours = 3 + random.nextInt(3);
+        nextReviewDate = now.add(Duration(hours: hours));
+        interval = 0; // Not in days yet
+        easeFactor = easeFactor + 0.1;
+        srsLevel = SRSLevel.review;
+        break;
 
-      srsLevel = SRSLevel.review;
+      case FlashcardRating.easy:
+        correctCount++;
+        repetitions++;
+        // Dễ: 1 ngày (mặc định cho level đầu tiên của Dễ)
+        // Nếu đã học rồi thì tịnh tiến theo interval cũ
+        if (repetitions <= 1) {
+          interval = 1;
+        } else {
+          interval = (interval * easeFactor).round();
+          if (interval < 1) interval = 1;
+        }
 
-      // Mark as mastered after 3 correct reviews
-      if (correctCount >= 3) {
-        isMastered = true;
-      }
-    } else {
-      incorrectCount++;
-      repetitions = 0;
-      interval = 1;
-      easeFactor = easeFactor - 0.2;
-      if (easeFactor < 1.3) easeFactor = 1.3;
-
-      srsLevel = SRSLevel.learning;
-      isMastered = false;
+        nextReviewDate = now.add(Duration(days: interval));
+        easeFactor = easeFactor + 0.15;
+        srsLevel = SRSLevel.review;
+        if (correctCount >= 3) {
+          isMastered = true;
+        }
+        break;
     }
 
-    // Calculate next review date
-    nextReviewDate = now.add(Duration(days: interval));
+    if (easeFactor < 1.3) easeFactor = 1.3;
   }
 
   /// Check if card is due for review
-  bool get isDue => DateTime.now().isAfter(nextReviewDate) || DateTime.now().isAtSameMomentAs(nextReviewDate);
+  bool get isDue =>
+      DateTime.now().isAfter(nextReviewDate) ||
+      DateTime.now().isAtSameMomentAs(nextReviewDate);
 }
 
 /// Flashcard deck containing multiple cards

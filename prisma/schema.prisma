@@ -37,6 +37,14 @@ model User {
   onboardingCompleted Boolean              @default(false)
   currentLevel        String?
   currentPhase        Int                  @default(1)
+  
+  // --- Streak Tracking ---
+  streakCount         Int                  @default(0)
+  lastActiveAt        DateTime?            // Ngày cuối cùng user truy cập dashboard
+
+  // Gamification (Real-time syncing)
+  exp                 Int                  @default(0)
+  level               Int                  @default(1)
 
   progress            UserProgress[]
 }

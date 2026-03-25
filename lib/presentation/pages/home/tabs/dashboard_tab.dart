@@ -23,6 +23,7 @@ import 'dashboard/widgets/skeletons/dashboard_flashcard_deck_skeleton.dart';
 import 'dashboard/widgets/skeletons/dashboard_header_skeleton.dart';
 import 'dashboard/widgets/skeletons/dashboard_milestone_skeleton.dart';
 import 'dashboard/widgets/skeletons/dashboard_stats_skeleton.dart';
+import '../widgets/srs_dashboard_widget.dart';
 
 /// Dashboard tab with modern design using Bloc pattern
 class DashboardTab extends StatefulWidget {
@@ -40,6 +41,14 @@ class DashboardTab extends StatefulWidget {
 
 class _DashboardTabState extends State<DashboardTab>
     with AutomaticKeepAliveClientMixin {
+  int _srsRefreshTrigger = 0;
+
+  void _refreshSRS() {
+    setState(() {
+      _srsRefreshTrigger++;
+    });
+  }
+
   @override
   bool get wantKeepAlive => true;
   @override
@@ -280,78 +289,98 @@ class _DashboardTabState extends State<DashboardTab>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, '/settings'),
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            width: 2,
-                          ),
-                          image: const DecorationImage(
-                            image: CachedNetworkImageProvider(
-                              'https://lh3.googleusercontent.com/aida-public/AB6AXuBvfCNi-OtMjt0XTS_NqGqEepWrcaCWyGvU4dJ6yIP0s_y4ZDK0wQ-pfw3BevDO-4nIXerfUwcFa-hXCBA7CV2hO4Y2amw5YNqVRiNU67CE0D-1vP4sGBkv_sAoGHQmcuAjqXAJYMZ6i2FCNFOnWOUrBpgxtxWxY7yhd3QzfMpeCD2pqhtiAtIhtwuASKkMosLZMoFwaaxuMoVFEgs6RWU8LmK6l_g2B9ueOIRaI4F5Cexd4cljTRv7whyKLTsI7JS3jUX1ODb4phvf',
+                Expanded(
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/settings'),
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              width: 2,
                             ),
-                            fit: BoxFit.cover,
+                            image: const DecorationImage(
+                              image: CachedNetworkImageProvider(
+                                'https://lh3.googleusercontent.com/aida-public/AB6AXuBvfCNi-OtMjt0XTS_NqGqEepWrcaCWyGvU4dJ6yIP0s_y4ZDK0wQ-pfw3BevDO-4nIXerfUwcFa-hXCBA7CV2hO4Y2amw5YNqVRiNU67CE0D-1vP4sGBkv_sAoGHQmcuAjqXAJYMZ6i2FCNFOnWOUrBpgxtxWxY7yhd3QzfMpeCD2pqhtiAtIhtwuASKkMosLZMoFwaaxuMoVFEgs6RWU8LmK6l_g2B9ueOIRaI4F5Cexd4cljTRv7whyKLTsI7JS3jUX1ODb4phvf',
+                              ),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Ohayou, ${state.user.name.split(' ').first}!',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Row(
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${state.currentJlptLevel} Journey',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              'Ohayou, ${state.user.name.split(' ').first}!',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.3,
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    'Level ${state.currentJlptLevel} Roadmap',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                              ),
-                              child: Text(
-                                'LEVEL ${state.user.level}',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: state.user.isPremium
+                                        ? Colors.amber.withValues(alpha: 0.1)
+                                        : AppColors.primary.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: state.user.isPremium
+                                          ? Colors.amber.withValues(alpha: 0.3)
+                                          : AppColors.primary.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    state.user.isPremium
+                                        ? 'PREMIUM VIP'
+                                        : 'BASIC',
+                                    style: TextStyle(
+                                      color: state.user.isPremium
+                                          ? Colors.amber[800]
+                                          : AppColors.primary,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
                 Row(
                   children: [
@@ -407,9 +436,9 @@ class _DashboardTabState extends State<DashboardTab>
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
           sliver: SliverToBoxAdapter(
             child: ModernStatsRow(
-              xp: state.displayedXP,
-              level: state.user.level,
-              phase: state.user.currentPhase,
+              streak: state.currentStreak,
+              roadmap: state.currentJlptLevel,
+              isPremium: state.user.isPremium,
             ),
           ),
         ),
@@ -470,6 +499,14 @@ class _DashboardTabState extends State<DashboardTab>
           ),
         ),
 
+        // SRS Dashboard (Moved below Milestone)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(0, 32, 0, 0),
+          sliver: SliverToBoxAdapter(
+            child: SRSDashboardWidget(key: ValueKey('srs_$_srsRefreshTrigger')),
+          ),
+        ),
+
         // Recommended Exercises (with lazy loading)
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
@@ -514,9 +551,12 @@ class _DashboardTabState extends State<DashboardTab>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FlashcardPage(lesson: lessonData),
+                        builder: (context) => FlashcardPage(
+                          lesson: lessonData,
+                          onProgressUpdated: _refreshSRS,
+                        ),
                       ),
-                    );
+                    ).then((_) => _refreshSRS());
                   }
                 },
               ),
@@ -546,6 +586,7 @@ class _DashboardTabState extends State<DashboardTab>
                     lesson: lessonData,
                     questId: quest.id,
                     onProgressUpdated: () {
+                      _refreshSRS();
                       // Reload dashboard after progress update
                       context.read<DashboardBloc>().add(
                         const DashboardLoadRequested(),
@@ -563,7 +604,7 @@ class _DashboardTabState extends State<DashboardTab>
                     },
                   ),
           ),
-        );
+        ).then((_) => _refreshSRS());
       } else {
         // Fallback to roadmap if lesson data not ready
         widget.onNavigateToRoadmap?.call();

@@ -6,6 +6,7 @@ import '../../../../data/datasources/local/roadmap_data.dart';
 import '../../../../data/services/user_progress_service.dart';
 import '../../../../domain/entities/conversation_models.dart';
 import '../../../../domain/entities/roadmap_models.dart';
+import '../../../../domain/entities/user.dart';
 import '../auth/auth_bloc.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
@@ -13,10 +14,6 @@ import 'dashboard_state.dart';
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   final AuthBloc authBloc;
   final UserProgressService progressService;
-
-  // Streak tracking keys
-  static const String _streakKey = 'user_streak';
-  static const String _lastStudyDateKey = 'last_study_date';
 
   DashboardBloc({required this.authBloc, required this.progressService})
     : super(const DashboardInitial()) {
@@ -62,18 +59,24 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       // Get flashcard decks (always populate, even for new users)
       final flashcardDecks = _getFlashcardDecks();
 
-      // Calculate streak
-      final streakData = await _calculateStreak();
+      // Process and Update real Streak
+      final updatedUser = _calculateRealStreak(user);
+      if (updatedUser != null) {
+        // Sync to backend via AuthBloc
+        authBloc.add(UpdateUserEvent(updatedUser));
+      }
+
+      final finalUser = updatedUser ?? user;
 
       emit(
         DashboardLoaded(
-          user: user,
+          user: finalUser,
           nextMilestone: nextMilestone,
           recommendedExercises: recommendations,
           flashcardDecks: flashcardDecks,
-          currentStreak: streakData['streak'] as int,
-          lastStudyDate: streakData['lastDate'] as DateTime?,
-          displayedXP: user.exp,
+          currentStreak: finalUser.streakCount,
+          lastStudyDate: finalUser.lastActiveAt,
+          displayedXP: finalUser.exp,
           currentJlptLevel: currentJlptLevel,
         ),
       );
@@ -130,8 +133,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     // Mark lesson as completed
     await progressService.markLessonAsCompleted(event.lessonId);
 
-    // Update streak
-    await _updateStreak();
+    // Streak is already handled in _onLoadRequested (which is called after this),
+    // but we can also trigger a manual check if needed.
 
     // Update user XP (this would typically be done via a repository)
     final newXP = currentState.user.exp + event.xpEarned;
@@ -217,56 +220,34 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     return exerciseCategories[1].lessons.take(4).toList();
   }
 
-  /// Calculate current streak
-  Future<Map<String, dynamic>> _calculateStreak() async {
-    final prefs = await SharedPreferences.getInstance();
-    final streak = prefs.getInt(_streakKey) ?? 0;
-    final lastStudyDateStr = prefs.getString(_lastStudyDateKey);
-
-    DateTime? lastStudyDate;
-    if (lastStudyDateStr != null) {
-      lastStudyDate = DateTime.parse(lastStudyDateStr);
-    }
-
-    return {'streak': streak, 'lastDate': lastStudyDate};
-  }
-
-  /// Update streak after completing a lesson
-  Future<void> _updateStreak() async {
-    final prefs = await SharedPreferences.getInstance();
+  /// Calculate real streak based on User entity
+  User? _calculateRealStreak(User user) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    final lastStudyDateStr = prefs.getString(_lastStudyDateKey);
-    DateTime? lastStudyDate;
-
-    if (lastStudyDateStr != null) {
-      lastStudyDate = DateTime.parse(lastStudyDateStr);
-      final lastDate = DateTime(
-        lastStudyDate.year,
-        lastStudyDate.month,
-        lastStudyDate.day,
-      );
-
-      final difference = today.difference(lastDate).inDays;
-
-      if (difference == 0) {
-        // Already studied today, no change
-        return;
-      } else if (difference == 1) {
-        // Consecutive day, increment streak
-        final currentStreak = prefs.getInt(_streakKey) ?? 0;
-        await prefs.setInt(_streakKey, currentStreak + 1);
-      } else {
-        // Streak broken, reset to 1
-        await prefs.setInt(_streakKey, 1);
-      }
-    } else {
-      // First time studying
-      await prefs.setInt(_streakKey, 1);
+    if (user.lastActiveAt == null) {
+      return user.copyWith(streakCount: 1, lastActiveAt: now);
     }
 
-    // Update last study date
-    await prefs.setString(_lastStudyDateKey, now.toIso8601String());
+    final lastActive = DateTime(
+      user.lastActiveAt!.year,
+      user.lastActiveAt!.month,
+      user.lastActiveAt!.day,
+    );
+
+    final difference = today.difference(lastActive).inDays;
+
+    if (difference == 1) {
+      // Consecutive day
+      return user.copyWith(
+        streakCount: user.streakCount + 1,
+        lastActiveAt: now,
+      );
+    } else if (difference > 1) {
+      // Streak broken
+      return user.copyWith(streakCount: 1, lastActiveAt: now);
+    }
+
+    return null; // Already active today or no change needed
   }
 }

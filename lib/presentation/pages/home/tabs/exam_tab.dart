@@ -548,65 +548,26 @@ class _ExamTabState extends State<ExamTab> {
   Widget _buildQuickPracticeBanner(BuildContext context, bool isDark) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: GestureDetector(
-        onTap: _showLevelSelection,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary.withValues(alpha: 0.85),
-                AppColors.primaryDark,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: _showLevelSelection,
+          icon: const Icon(Icons.bolt_rounded),
+          label: Text(
+            'Ôn luyện nhanh',
+            style: GoogleFonts.lexend(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
             ),
-            borderRadius: BorderRadius.circular(20),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.bolt_rounded,
-                  color: Colors.white,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ôn luyện nhanh',
-                      style: GoogleFonts.lexend(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    Text(
-                      '10 câu ngẫu nhiên - Không tính giờ',
-                      style: GoogleFonts.lexend(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Colors.white70,
-                size: 16,
-              ),
-            ],
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
           ),
         ),
       ),
