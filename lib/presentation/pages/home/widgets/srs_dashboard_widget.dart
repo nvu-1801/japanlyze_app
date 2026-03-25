@@ -1,3 +1,4 @@
+import 'package:japalyze/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -120,7 +121,7 @@ class _SRSDashboardWidgetState extends State<SRSDashboardWidget> {
                   _buildCompactBucket(
                     label: 'Tốt',
                     count: _counts[FlashcardRating.good] ?? 0,
-                    color: const Color(0xFF2962FF),
+                    color: AppColors.primary,
                     isDark: isDark,
                     onTap: () => _onBucketTap(FlashcardRating.good),
                   ),

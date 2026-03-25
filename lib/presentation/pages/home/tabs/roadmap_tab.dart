@@ -349,8 +349,8 @@ class _RoadmapTabState extends State<RoadmapTab> {
     final percentageDouble = totalQuests > 0 ? completedCount / totalQuests : 0.0;
 
     final bgColor = isDark ? Colors.grey[850] : const Color(0xFFF2F4F2);
-    final borderColor = isDark ? Colors.grey[800]! : const Color(0xFFBECAB9).withOpacity(0.15);
-    final primaryColor = isDark ? const Color(0xFF5DAC5B) : const Color(0xFF1B6D24);
+    final borderColor = isDark ? Colors.grey[800]! : AppColors.primary.withValues(alpha: 0.15);
+    final primaryColor = AppColors.primary;
     final tertiaryColor = isDark ? Colors.blue[300]! : const Color(0xFF0061A4);
     final tertiaryFixedColor = isDark ? Colors.blue[900]! : const Color(0xFFD1E4FF);
 
@@ -395,7 +395,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: tertiaryColor.withOpacity(0.2),
+                    color: tertiaryColor.withValues(alpha: 0.2),
                     width: 4,
                   ),
                 ),
@@ -435,7 +435,7 @@ class _RoadmapTabState extends State<RoadmapTab> {
 
   Widget _buildJlptLevelDropdown(bool isDark) {
     final bgColor = isDark ? Colors.grey[850] : const Color(0xFFF2F4F2);
-    final borderColor = isDark ? Colors.grey[800]! : const Color(0xFFBECAB9).withOpacity(0.15);
+    final borderColor = isDark ? Colors.grey[800]! : const Color(0xFFBECAB9).withValues(alpha: 0.15);
     final textColor = isDark ? Colors.white : const Color(0xFF191C1B);
 
     return Container(

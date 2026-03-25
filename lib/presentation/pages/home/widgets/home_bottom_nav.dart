@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:japalyze/core/constants/app_colors.dart';
 
 class HomeBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -19,8 +20,8 @@ class HomeBottomNav extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark 
-            ? const Color(0xFF18181B).withOpacity(0.85) 
-            : Colors.white.withOpacity(0.85),
+            ? const Color(0xFF18181B).withValues(alpha: 0.85) 
+            : Colors.white.withValues(alpha: 0.85),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
         boxShadow: const [
           BoxShadow(
@@ -104,7 +105,7 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    final activeColor = isDark ? const Color(0xFF5DAC5B) : const Color(0xFF1B6D24);
+    final activeColor = AppColors.primary;
     final inactiveColor = isDark ? const Color(0xFF71717A) : const Color(0xFF3F4A3C);
 
     return GestureDetector(
@@ -112,7 +113,7 @@ class _NavItem extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -125,7 +126,7 @@ class _NavItem extends StatelessWidget {
             Text(
               label,
               style: GoogleFonts.manrope(
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: FontWeight.w700,
                 color: isSelected ? activeColor : inactiveColor,
                 letterSpacing: 0.5,

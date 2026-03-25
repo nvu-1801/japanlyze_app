@@ -20,7 +20,6 @@ class SplashPage extends StatelessWidget {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
@@ -29,15 +28,9 @@ class SplashPage extends StatelessWidget {
                       offset: const Offset(0, 10),
                     ),
                   ],
-                ),
-                child: const Center(
-                  child: Text(
-                    '日',
-                    style: TextStyle(
-                      fontSize: 64,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/app_icon.png'),
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),

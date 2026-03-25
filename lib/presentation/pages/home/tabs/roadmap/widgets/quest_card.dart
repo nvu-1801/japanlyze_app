@@ -1,3 +1,4 @@
+import 'package:japalyze/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,30 +37,30 @@ class _QuestCardState extends State<QuestCard> {
     final isLocked = RoadmapUtils.isQuestLocked(widget.quest, widget.completedQuestIds, widget.weeks);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final primaryColor = isDark ? const Color(0xFF5DAC5B) : const Color(0xFF1B6D24);
-    final primaryFixedColor = isDark ? const Color(0xFF1B6D24) : const Color(0xFFA3F69C);
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primaryDark;
+    final primaryFixedColor = isDark ? AppColors.primaryDark : AppColors.primaryLight;
     
     Color bgColor = isDark ? Colors.grey[850]! : Colors.white;
-    Color borderColor = primaryColor.withOpacity(0.2);
+    Color borderColor = primaryColor.withValues(alpha: 0.2);
     Color iconBgColor = primaryFixedColor;
     Color iconColor = isDark ? Colors.white : primaryColor;
-    Color titleColor = isDark ? Colors.white : const Color(0xFF191C1B);
-    Color subtitleColor = isDark ? Colors.grey[400]! : const Color(0xFF3F4A3C);
+    Color titleColor = isDark ? Colors.white : AppColors.textPrimary;
+    Color subtitleColor = isDark ? Colors.grey[400]! : AppColors.textSecondary;
     
     if (isLocked) {
-      bgColor = isDark ? Colors.grey[900]! : const Color(0xFFF2F4F2).withOpacity(0.5);
+      bgColor = isDark ? Colors.grey[900]! : AppColors.background.withValues(alpha: 0.5);
       borderColor = Colors.transparent;
       iconBgColor = isDark ? Colors.grey[800]! : const Color(0xFFE1E3E1);
-      iconColor = isDark ? Colors.grey[500]! : const Color(0xFF3F4A3C);
-      titleColor = isDark ? Colors.grey[500]! : const Color(0xFF3F4A3C);
-      subtitleColor = titleColor.withOpacity(0.6);
+      iconColor = isDark ? Colors.grey[500]! : AppColors.textSecondary;
+      titleColor = isDark ? Colors.grey[500]! : AppColors.textSecondary;
+      subtitleColor = titleColor.withValues(alpha: 0.6);
     } else if (isDone) {
-      bgColor = isDark ? Colors.grey[850]! : const Color(0xFFF8FAF8);
-      borderColor = isDark ? Colors.grey[800]! : const Color(0xFFBECAB9).withOpacity(0.5);
-      iconBgColor = isDark ? Colors.green[900]!.withOpacity(0.3) : Colors.green[50]!;
-      iconColor = isDark ? Colors.green[400]! : Colors.green[700]!;
-      titleColor = isDark ? Colors.grey[300]! : const Color(0xFF191C1B).withOpacity(0.8);
-      subtitleColor = isDark ? Colors.grey[500]! : const Color(0xFF3F4A3C).withOpacity(0.8);
+      bgColor = isDark ? Colors.grey[850]! : AppColors.background;
+      borderColor = isDark ? Colors.grey[800]! : AppColors.primary.withValues(alpha: 0.5);
+      iconBgColor = isDark ? AppColors.primaryDark.withValues(alpha: 0.3) : AppColors.primaryLight.withValues(alpha: 0.1);
+      iconColor = isDark ? AppColors.primaryLight : AppColors.primaryDark;
+      titleColor = isDark ? Colors.grey[300]! : AppColors.textPrimary.withValues(alpha: 0.8);
+      subtitleColor = isDark ? Colors.grey[500]! : AppColors.textSecondary.withValues(alpha: 0.8);
     }
 
     return GestureDetector(
@@ -85,7 +86,7 @@ class _QuestCardState extends State<QuestCard> {
             boxShadow: (!isLocked && !isDone)
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF191C1B).withOpacity(0.04),
+                      color: AppColors.textPrimary.withValues(alpha: 0.04),
                       blurRadius: 32,
                       offset: const Offset(0, 8),
                     ),
@@ -160,7 +161,7 @@ class _QuestCardState extends State<QuestCard> {
               if (isLocked)
                 Icon(
                   Icons.lock_rounded,
-                  color: isDark ? Colors.grey[700] : const Color(0xFF3F4A3C).withOpacity(0.4),
+                  color: isDark ? Colors.grey[700] : AppColors.textSecondary.withValues(alpha: 0.4),
                   size: 24,
                 )
               else if (isDone)

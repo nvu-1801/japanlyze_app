@@ -1,3 +1,4 @@
+import 'package:japalyze/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../../domain/entities/roadmap_models.dart';
@@ -108,11 +109,11 @@ class SteppingStonesRoadmap extends StatelessWidget {
     Widget? child;
 
     if (isDone) {
-      backgroundColor = Colors.green.withValues(alpha: 0.1);
-      borderColor = Colors.green;
+      backgroundColor = AppColors.primary.withValues(alpha: 0.1);
+      borderColor = AppColors.primary;
       child = Icon(
         Icons.check_rounded,
-        color: Colors.green,
+        color: AppColors.primary,
         size: 28,
       );
     } else if (isLocked) {
@@ -186,7 +187,7 @@ class SteppingStonesRoadmap extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDone
-              ? Colors.green.withValues(alpha: 0.3)
+              ? AppColors.primary.withValues(alpha: 0.3)
               : (isDark ? Colors.grey[800]! : Colors.grey[100]!),
           width: 1,
         ),
@@ -247,7 +248,7 @@ class SteppingStonesRoadmap extends StatelessWidget {
       width: 3,
       decoration: BoxDecoration(
         color: isDone
-            ? Colors.green
+            ? AppColors.primary
             : (isLocked
                 ? (isDark ? Colors.grey[800]! : Colors.grey[200]!)
                 : iconColor.withValues(alpha: 0.3)),

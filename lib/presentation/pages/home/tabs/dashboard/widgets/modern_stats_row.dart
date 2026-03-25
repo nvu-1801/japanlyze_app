@@ -1,3 +1,4 @@
+import 'package:japalyze/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Modern stats row with animated XP counter
@@ -29,7 +30,7 @@ class ModernStatsRow extends StatelessWidget {
         Expanded(
           child: _ModernStatItem(
             icon: Icons.map_rounded,
-            color: Colors.blue,
+            color: AppColors.primary,
             label: 'Roadmap',
             value: roadmap,
           ),

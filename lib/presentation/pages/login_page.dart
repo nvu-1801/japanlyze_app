@@ -279,7 +279,7 @@ class _LoginPageState extends State<LoginPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Check debug console for auth status'),
-              backgroundColor: Colors.blue,
+              backgroundColor: AppColors.primary,
             ),
           );
         },
