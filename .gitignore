@@ -48,3 +48,30 @@ app.*.map.json
 .env
 .env.*
 !.env.example
+
+# Android
+.gradle/
+Captures/
+*.keystore
+*.jks
+gradle-wrapper.jar
+!gradle-wrapper.jar
+.cxx/
+*.apk
+*.aab
+*.output
+
+# Build artifacts
+build/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+
+# Dart/Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+pubspec-funcs.yaml
