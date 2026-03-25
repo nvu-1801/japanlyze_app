@@ -11,12 +11,18 @@ import '../auth/auth_bloc.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
+import '../../../../data/datasources/remote/exam_remote_datasource.dart';
+
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   final AuthBloc authBloc;
   final UserProgressService progressService;
+  final ExamRemoteDataSource examDs;
 
-  DashboardBloc({required this.authBloc, required this.progressService})
-    : super(const DashboardInitial()) {
+  DashboardBloc({
+    required this.authBloc,
+    required this.progressService,
+    required this.examDs,
+  }) : super(const DashboardInitial()) {
     on<DashboardLoadRequested>(_onLoadRequested);
     on<DashboardRefreshRequested>(_onRefreshRequested);
     on<DashboardXpUpdated>(_onXpUpdated);
@@ -53,16 +59,30 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         currentJlptLevel,
       );
 
-      // Generate smart recommendations (always populate, even for new users)
-      final recommendations = _generateRecommendations(completedLessons);
+      // Priority Lessons: Hiragana & Katakana
+      final priority = exerciseCategories[0].lessons;
 
-      // Get flashcard decks (always populate, even for new users)
+      // Topic Exercises: Smart recommendations from other categories
+      final topicExercises = _generateTopicRecommendations(completedLessons);
+
+      // Recommended Reading: Fetch from remote
+      List<dynamic> reading = [];
+      try {
+        final articles = await examDs.getRandomReadingArticles();
+        if (articles.isNotEmpty) {
+          articles.shuffle();
+          reading = articles.take(3).toList();
+        }
+      } catch (e) {
+        // Silently fail for reading recommendations if network error
+      }
+
+      // Get flashcard decks
       final flashcardDecks = _getFlashcardDecks();
 
       // Process and Update real Streak
       final updatedUser = _calculateRealStreak(user);
       if (updatedUser != null) {
-        // Sync to backend via AuthBloc
         authBloc.add(UpdateUserEvent(updatedUser));
       }
 
@@ -72,7 +92,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         DashboardLoaded(
           user: finalUser,
           nextMilestone: nextMilestone,
-          recommendedExercises: recommendations,
+          priorityExercises: priority,
+          topicExercises: topicExercises,
+          recommendedReading: reading,
           flashcardDecks: flashcardDecks,
           currentStreak: finalUser.streakCount,
           lastStudyDate: finalUser.lastActiveAt,
@@ -189,28 +211,20 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     }
   }
 
-  /// Generate smart recommendations (Phase 1 algorithm)
-  List<LessonItem> _generateRecommendations(List<String> completedLessons) {
+  /// Generate topic-based recommendations
+  List<LessonItem> _generateTopicRecommendations(
+    List<String> completedLessons,
+  ) {
     final recommendations = <LessonItem>[];
 
-    // 1. Get 2 items from vocabulary category (flashcard-like)
-    final vocabItems = exerciseCategories[1].lessons.take(2).toList();
+    // Get items from vocabulary category (Category 1)
+    final vocabItems = exerciseCategories[1].lessons.take(3).toList();
     recommendations.addAll(vocabItems);
 
-    // 2. Get 2 items from conversation category (grammar-like)
-    final convItems = exerciseCategories[0].lessons.take(2).toList();
+    // Get items from conversation category (Category 2)
+    final convItems = exerciseCategories[2].lessons.take(2).toList();
     recommendations.addAll(convItems);
 
-    // 3. Get 1 new lesson (not completed)
-    final newLesson = exerciseCategories
-        .expand((cat) => cat.lessons)
-        .firstWhere(
-          (lesson) => !completedLessons.contains(lesson.id),
-          orElse: () => exerciseCategories.first.lessons.first,
-        );
-    recommendations.add(newLesson);
-
-    // Limit to 5 items
     return recommendations.take(5).toList();
   }
 

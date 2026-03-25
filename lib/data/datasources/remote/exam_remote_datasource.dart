@@ -8,6 +8,8 @@ import '../../../../domain/entities/reading_article.dart';
 import '../../../../core/errors/exceptions.dart';
 
 import '../../../../domain/entities/test_result.dart';
+import '../../../data/services/isar_service.dart';
+import 'package:isar/isar.dart';
 
 class ExamRemoteDataSource {
   final Dio _dio;
@@ -34,16 +36,27 @@ class ExamRemoteDataSource {
 
   Future<void> saveTestResult(TestResult result) async {
     try {
+      // 1. Save to local Isar first for immediate availability
+      debugPrint('DEBUG: Saving TestResult to Isar: ${result.uuid}');
+      final isar = IsarService.instance.isar;
+      await isar.writeTxn(() async {
+        await isar.testResults.put(result);
+      });
+
+      // 2. Save to Supabase
       debugPrint('DEBUG: Supabase INSERT TestResult: ${result.toJson()}');
       final response = await _supabase
           .from('TestResult')
           .insert(result.toJson());
       debugPrint('DEBUG: Supabase Insert Response: $response');
+
       _historyCache = null; // Invalidate cache
     } on PostgrestException catch (e) {
       debugPrint(
         'Supabase error saving test result: ${e.message} (code: ${e.code})',
       );
+      // We don't throw here if local save succeeded, but we should log it
+      // Actually, throwing allows the UI to show a "Sync failed but saved locally" or similar
       debugPrint('DEBUG: Error Details: ${e.details}');
       debugPrint('DEBUG: Error Hint: ${e.hint}');
       throw ServerException(e.message, int.tryParse(e.code ?? '500') ?? 500);
@@ -57,15 +70,48 @@ class ExamRemoteDataSource {
     try {
       if (_historyCache != null) return _historyCache!;
 
-      final response = await _supabase
-          .from('TestResult')
-          .select()
-          .eq('userId', userId)
-          .order('completedAt', ascending: false);
+      // 1. Fetch from Local Isar
+      final isar = IsarService.instance.isar;
+      final localHistory = await isar.testResults
+          .where()
+          .filter()
+          .userIdEqualTo(userId)
+          .findAll();
 
-      final List<dynamic> data = response;
-      _historyCache = data.map((json) => TestResult.fromJson(json)).toList();
-      return _historyCache!;
+      // 2. Fetch from Supabase
+      List<TestResult> remoteHistory = [];
+      try {
+        final response = await _supabase
+            .from('TestResult')
+            .select()
+            .eq('userId', userId)
+            .order('completedAt', ascending: false);
+
+        final List<dynamic> data = response;
+        remoteHistory = data.map((json) => TestResult.fromJson(json)).toList();
+      } catch (e) {
+        debugPrint('Error fetching remote test history: $e');
+        // If remote fails, we still have local
+      }
+
+      // 3. Merge and De-duplicate
+      final Map<String, TestResult> merged = {};
+
+      // Local first
+      for (var r in localHistory) {
+        merged[r.uuid] = r;
+      }
+
+      // Remote overwrites or adds
+      for (var r in remoteHistory) {
+        merged[r.uuid] = r;
+      }
+
+      final resultList = merged.values.toList()
+        ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+
+      _historyCache = resultList;
+      return resultList;
     } catch (e) {
       debugPrint('Error fetching test history: $e');
       return [];

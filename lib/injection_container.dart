@@ -110,6 +110,6 @@ Future<void> init() async {
     ),
   );
   sl.registerFactory(
-    () => DashboardBloc(authBloc: sl(), progressService: sl()),
+    () => DashboardBloc(authBloc: sl(), progressService: sl(), examDs: sl()),
   );
 }

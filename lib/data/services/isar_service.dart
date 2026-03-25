@@ -1,6 +1,7 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../domain/entities/flashcard_models.dart';
+import '../../domain/entities/test_result.dart';
 
 /// Service for managing Isar database instance
 class IsarService {
@@ -25,6 +26,7 @@ class IsarService {
         FlashcardItemSchema,
         FlashcardDeckSchema,
         UserProgressHistorySchema,
+        TestResultSchema,
       ],
       directory: dir.path,
       inspector: true, // Enable for debugging
@@ -34,7 +36,9 @@ class IsarService {
   /// Get Isar instance
   Isar get isar {
     if (_isar == null) {
-      throw Exception('Isar database not initialized. Call initialize() first.');
+      throw Exception(
+        'Isar database not initialized. Call initialize() first.',
+      );
     }
     return _isar!;
   }

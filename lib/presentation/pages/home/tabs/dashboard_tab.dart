@@ -11,28 +11,37 @@ import 'roadmap/roadmap_utils.dart';
 import '../../../blocs/dashboard/dashboard_bloc.dart';
 import '../../../blocs/dashboard/dashboard_event.dart';
 import '../../../blocs/dashboard/dashboard_state.dart';
-import '../../lesson/flashcard_page.dart';
-import '../../lesson/conversation_lesson_page.dart';
 import '../widgets/quick_search_sheet.dart';
-import 'dashboard/widgets/flashcard_decks.dart';
 import 'dashboard/widgets/modern_stats_row.dart';
 import 'dashboard/widgets/next_milestone_card.dart';
 import 'dashboard/widgets/recommended_exercises.dart';
 import 'dashboard/widgets/skeletons/dashboard_exercise_card_skeleton.dart';
-import 'dashboard/widgets/skeletons/dashboard_flashcard_deck_skeleton.dart';
 import 'dashboard/widgets/skeletons/dashboard_header_skeleton.dart';
 import 'dashboard/widgets/skeletons/dashboard_milestone_skeleton.dart';
 import 'dashboard/widgets/skeletons/dashboard_stats_skeleton.dart';
+import 'dashboard/widgets/quick_actions.dart';
 import '../widgets/srs_dashboard_widget.dart';
+import '../../../../domain/entities/conversation_models.dart';
+import '../../../../data/datasources/remote/exam_remote_datasource.dart';
+import '../../../../injection_container.dart';
+import '../../../../domain/entities/exam.dart';
+import '../reading_page.dart';
+import '../../exam/exam_detail_page.dart';
+import 'dart:math' as math;
 
 /// Dashboard tab with modern design using Bloc pattern
 class DashboardTab extends StatefulWidget {
-  final VoidCallback? onSeeAllFlashcards;
   final VoidCallback? onNavigateToRoadmap;
+  final VoidCallback? onNavigateToReading;
+  final VoidCallback? onNavigateToExams;
+  final Function(int)? onNavigateToTab;
+
   const DashboardTab({
     super.key,
-    this.onSeeAllFlashcards,
     this.onNavigateToRoadmap,
+    this.onNavigateToReading,
+    this.onNavigateToExams,
+    this.onNavigateToTab,
   });
 
   @override
@@ -42,6 +51,15 @@ class DashboardTab extends StatefulWidget {
 class _DashboardTabState extends State<DashboardTab>
     with AutomaticKeepAliveClientMixin {
   int _srsRefreshTrigger = 0;
+  final _examDs = sl<ExamRemoteDataSource>();
+
+  final Map<String, Color> _levelColors = {
+    'N5': const Color(0xFF22C55E),
+    'N4': const Color(0xFFA855F7),
+    'N3': const Color(0xFF3B82F6),
+    'N2': const Color(0xFFF97316),
+    'N1': const Color(0xFFEF4444),
+  };
 
   void _refreshSRS() {
     setState(() {
@@ -136,36 +154,7 @@ class _DashboardTabState extends State<DashboardTab>
             ),
           ),
         ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-          sliver: SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Bộ thẻ mẫu',
-                  style: GoogleFonts.lexend(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 180,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: 4,
-                    itemBuilder: (context, index) => Padding(
-                      padding: EdgeInsets.only(right: index < 3 ? 16 : 0),
-                      child: const DashboardFlashcardDeckSkeleton(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
     );
@@ -483,6 +472,18 @@ class _DashboardTabState extends State<DashboardTab>
             ),
           ),
 
+        // Quick Actions Section
+        SliverPadding(
+          padding: const EdgeInsets.only(top: 24),
+          sliver: SliverToBoxAdapter(
+            child: QuickActions(
+              onQuickVocab: _startQuickVocab,
+              onQuickReading: _showReadingLevels,
+              onQuickExam: _showExamLevels,
+            ),
+          ),
+        ),
+
         // Next Milestone Section (Prominent CTA)
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
@@ -507,59 +508,168 @@ class _DashboardTabState extends State<DashboardTab>
           ),
         ),
 
-        // Recommended Exercises (with lazy loading)
+        // Priority Lessons (Hiragana & Katakana)
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
           sliver: SliverToBoxAdapter(
-            child: Visibility(
-              visible: state.recommendedExercises.isNotEmpty,
-              child: RecommendedExercises(
-                exercises: state.recommendedExercises,
-                onLessonTap: (lesson) {
-                  final lessonData = conversationData
-                      .where((c) => c.id == lesson.id)
-                      .firstOrNull;
-                  if (lessonData != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ConversationLessonPage(lesson: lessonData),
-                      ),
-                    );
-                  }
-                },
-              ),
+            child: RecommendedExercises(
+              title: 'Bài học ưu tiên',
+              exercises: state.priorityExercises,
+              onLessonTap: (lesson) {
+                _navigateToLesson(lesson);
+              },
             ),
           ),
         ),
 
-        // Sample Flashcard Decks (with lazy loading)
+        // Recommended Reading Articles
+        if (state.recommendedReading.isNotEmpty)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Đề xuất đọc',
+                        style: GoogleFonts.lexend(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => widget.onNavigateToReading?.call(),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Xem tất cả',
+                              style: GoogleFonts.lexend(
+                                fontSize: 12,
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              size: 16,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: state.recommendedReading.length,
+                      itemBuilder: (context, index) {
+                        final article = state.recommendedReading[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    ReadingDetailPage(article: article),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 220,
+                            margin: const EdgeInsets.only(right: 16),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.grey[800]!
+                                    : Colors.grey[200]!,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.book_outlined,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        article.title,
+                                        style: GoogleFonts.lexend(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        article.level,
+                                        style: GoogleFonts.lexend(
+                                          fontSize: 11,
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // Topic-based Exercises
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
           sliver: SliverToBoxAdapter(
-            child: Visibility(
-              visible: state.flashcardDecks.isNotEmpty,
-              child: FlashcardDecks(
-                decks: state.flashcardDecks,
-                onSeeAll: widget.onSeeAllFlashcards,
-                onDeckTap: (lesson) {
-                  final lessonData = conversationData
-                      .where((c) => c.id == lesson.id)
-                      .firstOrNull;
-                  if (lessonData != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FlashcardPage(
-                          lesson: lessonData,
-                          onProgressUpdated: _refreshSRS,
-                        ),
-                      ),
-                    ).then((_) => _refreshSRS());
-                  }
-                },
-              ),
+            child: RecommendedExercises(
+              title: 'Bài tập theo chủ đề',
+              exercises: state.topicExercises,
+              onSeeAll: () => widget.onNavigateToTab?.call(3),
+              onLessonTap: (lesson) {
+                final lessonData = conversationData
+                    .where((c) => c.id == lesson.id)
+                    .firstOrNull;
+                if (lessonData != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ConversationLessonPage(lesson: lessonData),
+                    ),
+                  );
+                }
+              },
             ),
           ),
         ),
@@ -567,6 +677,329 @@ class _DashboardTabState extends State<DashboardTab>
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
     );
+  }
+
+  void _startQuickVocab() {
+    final allVocab = conversationData.expand((l) => l.vocabItems).toList();
+    if (allVocab.isEmpty) return;
+
+    allVocab.shuffle();
+    final practiceVocab = allVocab.take(30).toList();
+
+    final practiceLesson = ConversationLesson(
+      id: 'quick_practice',
+      title: 'Luyện tập nhanh từ vựng',
+      description: 'Luyện tập ngẫu nhiên từ vựng từ tất cả chủ đề.',
+      vocabItems: practiceVocab,
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SRSFlashcardPage(
+          lesson: practiceLesson,
+          title: 'Luyện tập nhanh từ vựng',
+        ),
+      ),
+    ).then((_) => _refreshSRS());
+  }
+
+  void _showReadingLevels() {
+    Set<String> localSelected = {};
+    final readingLevels = {
+      'Beginner': const Color(0xFF10B981),
+      ..._levelColors,
+    };
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Chọn trình độ đọc',
+                style: GoogleFonts.lexend(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: readingLevels.entries.map((entry) {
+                  final isSelected = localSelected.contains(entry.key);
+                  return GestureDetector(
+                    onTap: () => setSheetState(() {
+                      if (isSelected)
+                        localSelected.remove(entry.key);
+                      else
+                        localSelected.add(entry.key);
+                    }),
+                    child: Container(
+                      width: (MediaQuery.of(context).size.width - 48 - 24) / 3,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? entry.value.withOpacity(0.2)
+                            : entry.value.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected
+                              ? entry.value
+                              : entry.value.withOpacity(0.2),
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          entry.key,
+                          style: GoogleFonts.lexend(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: entry.value,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: localSelected.isEmpty
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _startReadingChallenge(localSelected.toList());
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text('Bắt đầu thử thách'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _startReadingChallenge(List<String> levels) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
+    );
+    try {
+      final randoms = await _examDs.getRandomReadingArticles();
+      final levelsSet = levels.map((l) => l.toUpperCase()).toSet();
+      final filtered = randoms
+          .where((a) => levelsSet.contains(a.level.toUpperCase()))
+          .toList();
+
+      if (!mounted) return;
+      Navigator.pop(context); // hide loading
+
+      if (filtered.isNotEmpty) {
+        final article = filtered[math.Random().nextInt(filtered.length)];
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ReadingDetailPage(
+              article: article,
+              isChallenge: true,
+              selectedLevels: levels,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không tìm thấy bài đọc phù hợp.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+    }
+  }
+
+  void _showExamLevels() {
+    Set<String> localSelected = {};
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Chọn trình độ thi thử',
+                style: GoogleFonts.lexend(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _levelColors.entries.map((entry) {
+                  final isSelected = localSelected.contains(entry.key);
+                  return GestureDetector(
+                    onTap: () => setSheetState(() {
+                      if (isSelected)
+                        localSelected.remove(entry.key);
+                      else
+                        localSelected.add(entry.key);
+                    }),
+                    child: Container(
+                      width: (MediaQuery.of(context).size.width - 48 - 24) / 3,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? entry.value.withOpacity(0.2)
+                            : entry.value.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected
+                              ? entry.value
+                              : entry.value.withOpacity(0.2),
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          entry.key,
+                          style: GoogleFonts.lexend(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: entry.value,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: localSelected.isEmpty
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _startExamPractice(localSelected.toList());
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text('Bắt đầu ôn luyện'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _startExamPractice(List<String> levels) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
+    );
+    try {
+      final allExams = await _examDs.getExams();
+      final levelsSet = levels.map((l) => l.toUpperCase()).toSet();
+      final pool = allExams
+          .where((e) => levelsSet.contains(e.level.toUpperCase()))
+          .toList();
+
+      if (pool.isEmpty) {
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không tìm thấy đề thi.')),
+          );
+        }
+        return;
+      }
+
+      pool.shuffle();
+      final targetExams = pool.take(3).toList();
+      List<Question> questionPool = [];
+      for (var ex in targetExams) {
+        final d = await _examDs.getExamDetail(ex.id);
+        if (d.questions != null) questionPool.addAll(d.questions!);
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      if (questionPool.isNotEmpty) {
+        questionPool.shuffle();
+        final finalQuestions = questionPool.take(10).toList();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ExamDetailPage(
+              examId: 'quick-practice',
+              title: 'Ôn luyện nhanh',
+              initialExam: Exam(
+                id: 'quick-practice',
+                title: 'Ôn luyện nhanh',
+                level: 'Mixed',
+                duration: 0,
+                isPremium: false,
+                questionCount: finalQuestions.length,
+                questions: finalQuestions,
+              ),
+              isQuickPractice: true,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Không có câu hỏi.')));
+      }
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+    }
   }
 
   /// Navigate to lesson based on quest type

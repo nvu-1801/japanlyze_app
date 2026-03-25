@@ -36,8 +36,9 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
   String? _error;
 
   int _currentIndex = 0;
-  final Map<int, int> _selectedAnswers = {};
+  Map<int, int> _selectedAnswers = {};
   bool _isFinished = false;
+  bool _isSaving = false;
 
   // Timer state
   Timer? _timer;
@@ -126,6 +127,8 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
 
     if (authState is AuthAuthenticated && !widget.isQuickPractice) {
       debugPrint('DEBUG: User authenticated: ${authState.user.uuid}');
+      setState(() => _isSaving = true);
+
       final result = TestResult(
         uuid: const Uuid().v4(),
         score: score,
@@ -136,22 +139,46 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
         answers: jsonEncode(mappedAnswers),
       );
 
-      debugPrint('DEBUG: Attempting to save result: ${result.toJson()}');
+      debugPrint('DEBUG: Attempting to save result: ${result.uuid}');
+
+      // Show saving snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đang lưu kết quả...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
       try {
         await _dataSource.saveTestResult(result);
         debugPrint('DEBUG: Result saved successfully');
-      } catch (e) {
-        debugPrint('DEBUG: Failed to save result: $e');
         if (mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Không thể lưu kết quả thi: ${e.toString()}'),
-              backgroundColor: Colors.red,
+            const SnackBar(
+              content: Text('Kết quả đã được lưu thành công!'),
+              backgroundColor: Colors.green,
             ),
           );
         }
+      } catch (e) {
+        debugPrint('DEBUG: Failed to save result to cloud: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Lưu vào máy thành công. (Đồng bộ mây thất bại: ${e.toString()})',
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
       }
-    } else {
+    } else if (!widget.isQuickPractice) {
       debugPrint('DEBUG: User not authenticated, skip saving');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -202,6 +229,15 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
+        bottom: _isSaving
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(2),
+                child: LinearProgressIndicator(
+                  minHeight: 2,
+                  valueColor: AlwaysStoppedAnimation(AppColors.primary),
+                ),
+              )
+            : null,
         actions: [
           if (!_isFinished && _exam != null && !widget.isQuickPractice)
             Padding(

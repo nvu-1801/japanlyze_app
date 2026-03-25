@@ -24,7 +24,9 @@ class DashboardLoading extends DashboardState {
 class DashboardLoaded extends DashboardState {
   final User user;
   final RoadmapQuest? nextMilestone;
-  final List<LessonItem> recommendedExercises;
+  final List<LessonItem> priorityExercises; // Hiragana, Katakana
+  final List<LessonItem> topicExercises; // Other categories
+  final List<dynamic> recommendedReading; // Reading articles
   final List<LessonItem> flashcardDecks;
   final int currentStreak;
   final DateTime? lastStudyDate;
@@ -34,7 +36,9 @@ class DashboardLoaded extends DashboardState {
   const DashboardLoaded({
     required this.user,
     this.nextMilestone,
-    this.recommendedExercises = const [],
+    this.priorityExercises = const [],
+    this.topicExercises = const [],
+    this.recommendedReading = const [],
     this.flashcardDecks = const [],
     this.currentStreak = 0,
     this.lastStudyDate,
@@ -55,7 +59,9 @@ class DashboardLoaded extends DashboardState {
   DashboardLoaded copyWith({
     User? user,
     RoadmapQuest? nextMilestone,
-    List<LessonItem>? recommendedExercises,
+    List<LessonItem>? priorityExercises,
+    List<LessonItem>? topicExercises,
+    List<dynamic>? recommendedReading,
     List<LessonItem>? flashcardDecks,
     int? currentStreak,
     DateTime? lastStudyDate,
@@ -65,7 +71,9 @@ class DashboardLoaded extends DashboardState {
     return DashboardLoaded(
       user: user ?? this.user,
       nextMilestone: nextMilestone ?? this.nextMilestone,
-      recommendedExercises: recommendedExercises ?? this.recommendedExercises,
+      priorityExercises: priorityExercises ?? this.priorityExercises,
+      topicExercises: topicExercises ?? this.topicExercises,
+      recommendedReading: recommendedReading ?? this.recommendedReading,
       flashcardDecks: flashcardDecks ?? this.flashcardDecks,
       currentStreak: currentStreak ?? this.currentStreak,
       lastStudyDate: lastStudyDate ?? this.lastStudyDate,
@@ -78,7 +86,9 @@ class DashboardLoaded extends DashboardState {
   List<Object?> get props => [
     user,
     nextMilestone,
-    recommendedExercises,
+    priorityExercises,
+    topicExercises,
+    recommendedReading,
     flashcardDecks,
     currentStreak,
     lastStudyDate,

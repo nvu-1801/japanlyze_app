@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../../domain/entities/conversation_models.dart';
 
 /// Recommended exercises with haptic feedback and lazy loading
 class RecommendedExercises extends StatefulWidget {
+  final String title;
   final List<LessonItem> exercises;
   final Function(LessonItem) onLessonTap;
+  final VoidCallback? onSeeAll;
 
   const RecommendedExercises({
     super.key,
+    required this.title,
     required this.exercises,
     required this.onLessonTap,
+    this.onSeeAll,
   });
 
   @override
@@ -28,9 +33,35 @@ class _RecommendedExercisesState extends State<RecommendedExercises>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Bài tập đề xuất',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              widget.title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            if (widget.onSeeAll != null)
+              GestureDetector(
+                onTap: widget.onSeeAll,
+                child: Row(
+                  children: [
+                    Text(
+                      'Xem tất cả',
+                      style: GoogleFonts.lexend(
+                        fontSize: 12,
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 16),
         SizedBox(
@@ -66,7 +97,9 @@ class _RecommendedExercisesState extends State<RecommendedExercises>
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: lessonItem.color != null
-                              ? (lessonItem.color as Color).withValues(alpha: 0.1)
+                              ? (lessonItem.color as Color).withValues(
+                                  alpha: 0.1,
+                                )
                               : Colors.grey.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
