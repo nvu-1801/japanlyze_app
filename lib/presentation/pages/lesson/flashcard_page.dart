@@ -33,7 +33,7 @@ class _FlashcardPageState extends State<FlashcardPage>
   static const Color midnightSurface = Color(0xFF1a2632);
   static const Color midnightSurfaceVariant = Color(0xFF253441);
   static const Color midnightOutline = Color(0xFF334155);
-  static const Color midnightPrimary = Color(0xFF2962FF);
+  static const Color midnightPrimary = AppColors.primary;
   static const Color midnightSecondary = Color(0xFF92adc9);
   static const Color midnightOnSurface = Color(0xFFf1f5f9);
   static const Color midnightOnSurfaceVariant = Color(0xFF94a3b8);
@@ -43,7 +43,7 @@ class _FlashcardPageState extends State<FlashcardPage>
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightSurfaceVariant = Color(0xFFF1F5F9);
   static const Color lightOutline = Color(0xFFE2E8F0);
-  static const Color lightPrimary = Color(0xFF2962FF);
+  static const Color lightPrimary = AppColors.primary;
   static const Color lightSecondary = Color(0xFF64748B);
   static const Color lightOnSurface = Color(0xFF0F172A);
   static const Color lightOnSurfaceVariant = Color(0xFF475569);
@@ -194,7 +194,7 @@ class _FlashcardPageState extends State<FlashcardPage>
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

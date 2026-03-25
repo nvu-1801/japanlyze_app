@@ -188,8 +188,8 @@ class _VocabPracticePageState extends State<VocabPracticePage> {
               height: 80,
               decoration: BoxDecoration(
                 color: _score >= total / 2
-                    ? Colors.green.withOpacity(0.1)
-                    : Colors.orange.withOpacity(0.1),
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : Colors.orange.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -291,7 +291,7 @@ class _VocabPracticePageState extends State<VocabPracticePage> {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: (_currentIndex + 1) / total,
-            backgroundColor: AppColors.primary.withOpacity(0.1),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
             minHeight: 6,
           ),
@@ -378,7 +378,7 @@ class _VocabPracticePageState extends State<VocabPracticePage> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -421,21 +421,21 @@ class _VocabPracticePageState extends State<VocabPracticePage> {
         bool isCorrectOpt = opt == q.correctAnswer;
 
         Color bgColor = isDark ? Colors.grey[800]! : Colors.white;
-        Color borderColor = Colors.grey.withOpacity(0.2);
+        Color borderColor = Colors.grey.withValues(alpha: 0.2);
         Color textColor = isDark ? Colors.white : AppColors.textPrimary;
 
         if (_answered) {
           if (isCorrectOpt) {
-            bgColor = Colors.green.withOpacity(0.1);
+            bgColor = Colors.green.withValues(alpha: 0.1);
             borderColor = Colors.green;
             textColor = Colors.green;
           } else if (isSelected && !isCorrectOpt) {
-            bgColor = Colors.red.withOpacity(0.1);
+            bgColor = Colors.red.withValues(alpha: 0.1);
             borderColor = Colors.red;
             textColor = Colors.red;
           }
         } else if (isSelected) {
-          bgColor = AppColors.primary.withOpacity(0.1);
+          bgColor = AppColors.primary.withValues(alpha: 0.1);
           borderColor = AppColors.primary;
           textColor = AppColors.primary;
         }
@@ -501,7 +501,7 @@ class _VocabPracticePageState extends State<VocabPracticePage> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -525,8 +525,8 @@ class _VocabPracticePageState extends State<VocabPracticePage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _isCorrect
-            ? Colors.green.withOpacity(0.1)
-            : Colors.red.withOpacity(0.1),
+            ? Colors.green.withValues(alpha: 0.1)
+            : Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _isCorrect ? Colors.green : Colors.red),
       ),

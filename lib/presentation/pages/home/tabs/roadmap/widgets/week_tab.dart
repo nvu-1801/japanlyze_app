@@ -1,3 +1,4 @@
+import 'package:japalyze/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -20,10 +21,10 @@ class WeekTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    final selectedBg = isDark ? const Color(0xFF5DAC5B) : const Color(0xFF1B6D24);
+    final selectedBg = isDark ? AppColors.primaryLight : AppColors.primaryDark;
     final unselectedBg = isDark ? Colors.grey[800] : const Color(0xFFE6E9E7); // surface-container-high
     final selectedText = Colors.white;
-    final unselectedText = isDark ? Colors.grey[400] : const Color(0xFF3F4A3C); // on-surface-variant
+    final unselectedText = isDark ? Colors.grey[400] : AppColors.textSecondary; // on-surface-variant
 
     return GestureDetector(
       onTap: onTap,
@@ -37,7 +38,7 @@ class WeekTab extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

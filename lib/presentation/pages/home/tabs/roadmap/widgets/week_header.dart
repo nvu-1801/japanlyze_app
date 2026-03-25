@@ -1,3 +1,4 @@
+import 'package:japalyze/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../../domain/entities/roadmap_models.dart';
@@ -17,8 +18,8 @@ class WeekHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark ? const Color(0xFF5DAC5B) : const Color(0xFF1B6D24);
-    final primaryContainer = isDark ? const Color(0xFF1B6D24) : const Color(0xFF5DAC5B);
+    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primaryDark;
+    final primaryContainer = isDark ? AppColors.primaryDark : AppColors.primaryLight;
     final onPrimary = Colors.white;
 
     return Container(
@@ -33,7 +34,7 @@ class WeekHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.3),
+            color: primaryColor.withValues(alpha: 0.3),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -70,7 +71,7 @@ class WeekHeader extends StatelessWidget {
                 week.description,
                 style: GoogleFonts.manrope(
                   fontSize: 14,
-                  color: onPrimary.withOpacity(0.8),
+                  color: onPrimary.withValues(alpha: 0.8),
                   height: 1.5,
                 ),
                 maxLines: 2,
@@ -83,7 +84,7 @@ class WeekHeader extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                       border: Border.all(color: primaryColor, width: 2),
                     ),
@@ -102,7 +103,7 @@ class WeekHeader extends StatelessWidget {
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
-                      color: onPrimary.withOpacity(0.9),
+                      color: onPrimary.withValues(alpha: 0.9),
                     ),
                   ),
                 ],

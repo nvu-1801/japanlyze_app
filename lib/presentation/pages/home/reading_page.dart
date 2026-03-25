@@ -1379,10 +1379,10 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.blue.withValues(alpha: 0.05),
+                                color: AppColors.primary.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: Colors.blue.withValues(alpha: 0.1),
+                                  color: AppColors.primary.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Text(
@@ -1576,7 +1576,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                 _lastWords.isEmpty ? 'Đang nghe...' : _lastWords,
                 style: GoogleFonts.notoSansJp(
                   fontSize: 14,
-                  color: Colors.blue,
+                  color: AppColors.primary,
                   fontStyle: FontStyle.italic,
                   fontWeight: FontWeight.w500,
                 ),

@@ -37,7 +37,7 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
   static const Color midnightBg = Color(0xFF101922);
   static const Color midnightSurfaceVariant = Color(0xFF253441);
   static const Color midnightOutline = Color(0xFF334155);
-  static const Color midnightPrimary = Color(0xFF2962FF);
+  static const Color midnightPrimary = AppColors.primary;
   static const Color midnightOnSurface = Color(0xFFf1f5f9);
   static const Color midnightOnSurfaceVariant = Color(0xFF94a3b8);
 
@@ -45,7 +45,7 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
   static const Color lightBg = Color(0xFFF8FAFC);
   static const Color lightSurfaceVariant = Color(0xFFF1F5F9);
   static const Color lightOutline = Color(0xFFE2E8F0);
-  static const Color lightPrimary = Color(0xFF2962FF);
+  static const Color lightPrimary = AppColors.primary;
   static const Color lightOnSurface = Color(0xFF0F172A);
   static const Color lightOnSurfaceVariant = Color(0xFF475569);
 
@@ -525,7 +525,7 @@ class _SrsFlashcardItemState extends State<_SrsFlashcardItem>
     final onSurface = widget.isDark
         ? const Color(0xFFf1f5f9)
         : const Color(0xFF0F172A);
-    final primary = const Color(0xFF2962FF);
+    final primary = AppColors.primary;
     final secondary = widget.isDark
         ? const Color(0xFF92adc9)
         : const Color(0xFF64748B);
