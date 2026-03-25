@@ -144,36 +144,29 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, User>> updateProfile(User user) async {
-    // Virtual Demo Mode: Bypass real API calls to avoid connection errors
+    // 1. Always update local storage first (offline-first)
     try {
-      // We still update local storage so the change persists during the session
       await _localDataSource.cacheUser(user);
-      debugPrint(
-        'Virtual Demo: Profile updated locally to ${user.currentLevel}',
-      );
-      return Right(user);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
 
-    /* 
-    // Original real connection logic:
-    if (!await _isConnected()) {
-      return const Left(NetworkFailure());
+    // 2. Try to update remote if connected
+    if (await _isConnected()) {
+      try {
+        final updatedUser = await _remoteDataSource.updateProfile(user);
+        await _localDataSource.cacheUser(updatedUser);
+        return Right(updatedUser);
+      } catch (e) {
+        // If remote fails, we still return Right(user) because it's cached locally
+        debugPrint(
+          'AuthRepository: Remote update failed, but local is updated: $e',
+        );
+        return Right(user);
+      }
     }
 
-    try {
-      final updatedUser = await _remoteDataSource.updateProfile(user);
-      await _localDataSource.cacheUser(updatedUser);
-      return Right(updatedUser);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message, e.statusCode));
-    } on NetworkException {
-      return const Left(NetworkFailure());
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-    */
+    return Right(user);
   }
 
   @override

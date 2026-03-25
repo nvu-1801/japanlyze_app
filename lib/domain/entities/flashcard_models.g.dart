@@ -77,49 +77,54 @@ const FlashcardItemSchema = CollectionSchema(
       name: r'kana',
       type: IsarType.string,
     ),
-    r'lastReviewDate': PropertySchema(
+    r'lastRatingIndex': PropertySchema(
       id: 12,
+      name: r'lastRatingIndex',
+      type: IsarType.long,
+    ),
+    r'lastReviewDate': PropertySchema(
+      id: 13,
       name: r'lastReviewDate',
       type: IsarType.dateTime,
     ),
     r'meaning': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'meaning',
       type: IsarType.string,
     ),
     r'nextReviewDate': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'nextReviewDate',
       type: IsarType.dateTime,
     ),
     r'note': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'note',
       type: IsarType.string,
     ),
     r'questId': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'questId',
       type: IsarType.string,
     ),
     r'repetitions': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'repetitions',
       type: IsarType.long,
     ),
     r'romaji': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'romaji',
       type: IsarType.string,
     ),
     r'srsLevel': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'srsLevel',
       type: IsarType.byte,
       enumMap: _FlashcardItemsrsLevelEnumValueMap,
     ),
     r'updatedAt': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'updatedAt',
       type: IsarType.dateTime,
     )
@@ -229,15 +234,16 @@ void _flashcardItemSerialize(
   writer.writeBool(offsets[9], object.isMastered);
   writer.writeString(offsets[10], object.japanese);
   writer.writeString(offsets[11], object.kana);
-  writer.writeDateTime(offsets[12], object.lastReviewDate);
-  writer.writeString(offsets[13], object.meaning);
-  writer.writeDateTime(offsets[14], object.nextReviewDate);
-  writer.writeString(offsets[15], object.note);
-  writer.writeString(offsets[16], object.questId);
-  writer.writeLong(offsets[17], object.repetitions);
-  writer.writeString(offsets[18], object.romaji);
-  writer.writeByte(offsets[19], object.srsLevel.index);
-  writer.writeDateTime(offsets[20], object.updatedAt);
+  writer.writeLong(offsets[12], object.lastRatingIndex);
+  writer.writeDateTime(offsets[13], object.lastReviewDate);
+  writer.writeString(offsets[14], object.meaning);
+  writer.writeDateTime(offsets[15], object.nextReviewDate);
+  writer.writeString(offsets[16], object.note);
+  writer.writeString(offsets[17], object.questId);
+  writer.writeLong(offsets[18], object.repetitions);
+  writer.writeString(offsets[19], object.romaji);
+  writer.writeByte(offsets[20], object.srsLevel.index);
+  writer.writeDateTime(offsets[21], object.updatedAt);
 }
 
 FlashcardItem _flashcardItemDeserialize(
@@ -259,17 +265,18 @@ FlashcardItem _flashcardItemDeserialize(
   object.isMastered = reader.readBool(offsets[9]);
   object.japanese = reader.readString(offsets[10]);
   object.kana = reader.readString(offsets[11]);
-  object.lastReviewDate = reader.readDateTimeOrNull(offsets[12]);
-  object.meaning = reader.readString(offsets[13]);
-  object.nextReviewDate = reader.readDateTime(offsets[14]);
-  object.note = reader.readStringOrNull(offsets[15]);
-  object.questId = reader.readString(offsets[16]);
-  object.repetitions = reader.readLong(offsets[17]);
-  object.romaji = reader.readString(offsets[18]);
+  object.lastRatingIndex = reader.readLongOrNull(offsets[12]);
+  object.lastReviewDate = reader.readDateTimeOrNull(offsets[13]);
+  object.meaning = reader.readString(offsets[14]);
+  object.nextReviewDate = reader.readDateTime(offsets[15]);
+  object.note = reader.readStringOrNull(offsets[16]);
+  object.questId = reader.readString(offsets[17]);
+  object.repetitions = reader.readLong(offsets[18]);
+  object.romaji = reader.readString(offsets[19]);
   object.srsLevel =
-      _FlashcardItemsrsLevelValueEnumMap[reader.readByteOrNull(offsets[19])] ??
+      _FlashcardItemsrsLevelValueEnumMap[reader.readByteOrNull(offsets[20])] ??
           SRSLevel.newCard;
-  object.updatedAt = reader.readDateTime(offsets[20]);
+  object.updatedAt = reader.readDateTime(offsets[21]);
   return object;
 }
 
@@ -305,24 +312,26 @@ P _flashcardItemDeserializeProp<P>(
     case 11:
       return (reader.readString(offset)) as P;
     case 12:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 13:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 14:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 15:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 16:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 17:
-      return (reader.readLong(offset)) as P;
-    case 18:
       return (reader.readString(offset)) as P;
+    case 18:
+      return (reader.readLong(offset)) as P;
     case 19:
+      return (reader.readString(offset)) as P;
+    case 20:
       return (_FlashcardItemsrsLevelValueEnumMap[
               reader.readByteOrNull(offset)] ??
           SRSLevel.newCard) as P;
-    case 20:
+    case 21:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1709,6 +1718,80 @@ extension FlashcardItemQueryFilter
   }
 
   QueryBuilder<FlashcardItem, FlashcardItem, QAfterFilterCondition>
+      lastRatingIndexIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastRatingIndex',
+      ));
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterFilterCondition>
+      lastRatingIndexIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastRatingIndex',
+      ));
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterFilterCondition>
+      lastRatingIndexEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastRatingIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterFilterCondition>
+      lastRatingIndexGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastRatingIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterFilterCondition>
+      lastRatingIndexLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastRatingIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterFilterCondition>
+      lastRatingIndexBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastRatingIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterFilterCondition>
       lastReviewDateIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -2732,6 +2815,20 @@ extension FlashcardItemQuerySortBy
   }
 
   QueryBuilder<FlashcardItem, FlashcardItem, QAfterSortBy>
+      sortByLastRatingIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastRatingIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterSortBy>
+      sortByLastRatingIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastRatingIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterSortBy>
       sortByLastReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.asc);
@@ -3017,6 +3114,20 @@ extension FlashcardItemQuerySortThenBy
   }
 
   QueryBuilder<FlashcardItem, FlashcardItem, QAfterSortBy>
+      thenByLastRatingIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastRatingIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterSortBy>
+      thenByLastRatingIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastRatingIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QAfterSortBy>
       thenByLastReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.asc);
@@ -3215,6 +3326,13 @@ extension FlashcardItemQueryWhereDistinct
   }
 
   QueryBuilder<FlashcardItem, FlashcardItem, QDistinct>
+      distinctByLastRatingIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastRatingIndex');
+    });
+  }
+
+  QueryBuilder<FlashcardItem, FlashcardItem, QDistinct>
       distinctByLastReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastReviewDate');
@@ -3354,6 +3472,13 @@ extension FlashcardItemQueryProperty
   QueryBuilder<FlashcardItem, String, QQueryOperations> kanaProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'kana');
+    });
+  }
+
+  QueryBuilder<FlashcardItem, int?, QQueryOperations>
+      lastRatingIndexProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastRatingIndex');
     });
   }
 

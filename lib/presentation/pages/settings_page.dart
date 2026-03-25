@@ -380,8 +380,16 @@ class _ProfileHeader extends StatelessWidget {
                 value: '${user.streakCount}',
                 label: 'Streak',
               ),
-              _StatChip(icon: '⚡', value: '${user.exp}', label: 'XP'),
-              _StatChip(icon: '🏆', value: 'Lv.${user.level}', label: 'Level'),
+              _StatChip(
+                icon: '🗺️',
+                value: user.currentLevel ?? 'N5',
+                label: 'Roadmap',
+              ),
+              _StatChip(
+                icon: user.isPremium ? '💎' : '👤',
+                value: user.isPremium ? 'VIP' : 'Basic',
+                label: user.isPremium ? 'Premium' : 'Sử dụng',
+              ),
             ],
           ),
         ],

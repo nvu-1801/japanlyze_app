@@ -23,6 +23,7 @@ import 'dashboard/widgets/skeletons/dashboard_flashcard_deck_skeleton.dart';
 import 'dashboard/widgets/skeletons/dashboard_header_skeleton.dart';
 import 'dashboard/widgets/skeletons/dashboard_milestone_skeleton.dart';
 import 'dashboard/widgets/skeletons/dashboard_stats_skeleton.dart';
+import '../widgets/srs_dashboard_widget.dart';
 
 /// Dashboard tab with modern design using Bloc pattern
 class DashboardTab extends StatefulWidget {
@@ -40,6 +41,14 @@ class DashboardTab extends StatefulWidget {
 
 class _DashboardTabState extends State<DashboardTab>
     with AutomaticKeepAliveClientMixin {
+  int _srsRefreshTrigger = 0;
+
+  void _refreshSRS() {
+    setState(() {
+      _srsRefreshTrigger++;
+    });
+  }
+
   @override
   bool get wantKeepAlive => true;
   @override
@@ -317,9 +326,9 @@ class _DashboardTabState extends State<DashboardTab>
                         Row(
                           children: [
                             Text(
-                              '${state.currentJlptLevel} Journey',
+                              'Level ${state.currentJlptLevel} Roadmap',
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -330,20 +339,26 @@ class _DashboardTabState extends State<DashboardTab>
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
+                                color: state.user.isPremium
+                                    ? Colors.amber.withValues(alpha: 0.1)
+                                    : AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.3,
-                                  ),
+                                  color: state.user.isPremium
+                                      ? Colors.amber.withValues(alpha: 0.3)
+                                      : AppColors.primary.withValues(
+                                          alpha: 0.3,
+                                        ),
                                 ),
                               ),
                               child: Text(
-                                'LEVEL ${state.user.level}',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                                state.user.isPremium ? 'PREMIUM VIP' : 'BASIC',
+                                style: TextStyle(
+                                  color: state.user.isPremium
+                                      ? Colors.amber[800]
+                                      : AppColors.primary,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
                                 ),
                               ),
                             ),
@@ -407,9 +422,9 @@ class _DashboardTabState extends State<DashboardTab>
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
           sliver: SliverToBoxAdapter(
             child: ModernStatsRow(
-              xp: state.displayedXP,
-              level: state.user.level,
-              phase: state.user.currentPhase,
+              streak: state.currentStreak,
+              roadmap: state.currentJlptLevel,
+              isPremium: state.user.isPremium,
             ),
           ),
         ),
@@ -470,6 +485,14 @@ class _DashboardTabState extends State<DashboardTab>
           ),
         ),
 
+        // SRS Dashboard (Moved below Milestone)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(0, 32, 0, 0),
+          sliver: SliverToBoxAdapter(
+            child: SRSDashboardWidget(key: ValueKey('srs_$_srsRefreshTrigger')),
+          ),
+        ),
+
         // Recommended Exercises (with lazy loading)
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
@@ -514,9 +537,12 @@ class _DashboardTabState extends State<DashboardTab>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FlashcardPage(lesson: lessonData),
+                        builder: (context) => FlashcardPage(
+                          lesson: lessonData,
+                          onProgressUpdated: _refreshSRS,
+                        ),
                       ),
-                    );
+                    ).then((_) => _refreshSRS());
                   }
                 },
               ),
@@ -546,6 +572,7 @@ class _DashboardTabState extends State<DashboardTab>
                     lesson: lessonData,
                     questId: quest.id,
                     onProgressUpdated: () {
+                      _refreshSRS();
                       // Reload dashboard after progress update
                       context.read<DashboardBloc>().add(
                         const DashboardLoadRequested(),
@@ -563,7 +590,7 @@ class _DashboardTabState extends State<DashboardTab>
                     },
                   ),
           ),
-        );
+        ).then((_) => _refreshSRS());
       } else {
         // Fallback to roadmap if lesson data not ready
         widget.onNavigateToRoadmap?.call();

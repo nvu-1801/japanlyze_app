@@ -21,6 +21,7 @@ class User {
   bool onboardingCompleted = false;
   String? currentLevel;
   int currentPhase = 1;
+  DateTime? lastActiveAt;
   late DateTime createdAt;
   DateTime? updatedAt;
 
@@ -41,6 +42,7 @@ class User {
     this.onboardingCompleted = false,
     this.currentLevel,
     this.currentPhase = 1,
+    this.lastActiveAt,
     required DateTime createdAt,
     this.updatedAt,
   }) : createdAt = createdAt;
@@ -62,6 +64,7 @@ class User {
     bool? onboardingCompleted,
     String? currentLevel,
     int? currentPhase,
+    DateTime? lastActiveAt,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -82,6 +85,7 @@ class User {
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       currentLevel: currentLevel ?? this.currentLevel,
       currentPhase: currentPhase ?? this.currentPhase,
+      lastActiveAt: lastActiveAt ?? this.lastActiveAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -107,6 +111,9 @@ class User {
       onboardingCompleted: json['onboardingCompleted'] ?? false,
       currentLevel: json['currentLevel'],
       currentPhase: json['currentPhase'] ?? 1,
+      lastActiveAt: json['lastActiveAt'] != null
+          ? DateTime.parse(json['lastActiveAt'])
+          : null,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
@@ -133,6 +140,7 @@ class User {
       'onboardingCompleted': onboardingCompleted,
       'currentLevel': currentLevel,
       'currentPhase': currentPhase,
+      'lastActiveAt': lastActiveAt?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };

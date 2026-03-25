@@ -773,6 +773,7 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   String? _aiFeedback;
   String? _aiDetails;
   DateTime? _startTime;
+  bool _isHolding = false; // Tracks if the user is holding the mic button
 
   // Visualizer simulation
   List<double> _audioBars = List.generate(20, (_) => 10.0);
@@ -802,8 +803,22 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     try {
       _speechEnabled = await _speechToText.initialize(
         onStatus: (status) {
+          debugPrint('STT Status: $status, isHolding: $_isHolding');
+
+          // FIX 1 & Auto-Restart:
           if (status == 'done' || status == 'notListening') {
-            if (mounted) setState(() => _isListening = false);
+            if (_isHolding) {
+              // Platform stopped prematurely but user still holding -> RESTART
+              debugPrint('STT platform auto-stop detected, restarting...');
+              _startListening(isAutoRestart: true);
+            } else if (_isListening) {
+              // Normal stop or timeout when not holding (e.g. initial timeout fix)
+              _stopListening();
+            } else {
+              if (mounted) {
+                setState(() => _isListening = false);
+              }
+            }
           }
         },
         onError: (e) => debugPrint('STT Error: $e'),
@@ -817,6 +832,8 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   @override
   void dispose() {
     _tts.stop();
+    // FIX 2: Huỷ STT khi navigate ra ngoài để tránh chạy ngầm
+    _speechToText.cancel();
     _pageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -938,6 +955,17 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     setState(() => _fetchingNext = true);
     try {
       if (widget.isChallenge) {
+        // FIX 3: Reset _isEvaluating khi chuyển bài để tránh UI lock
+        if (mounted) {
+          setState(() {
+            _isEvaluating = false;
+            _isListening = false;
+            _score = null;
+            _aiFeedback = null;
+            _aiDetails = null;
+            _lastWords = '';
+          });
+        }
         await _fetchTrulyRandomSnippet();
       } else {
         final randoms = await _ds.getRandomReadingArticles();
@@ -957,6 +985,9 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
             _aiFeedback = null;
             _aiDetails = null;
             _lastWords = '';
+            // FIX 3: Reset evaluating state khi sang bài mới
+            _isEvaluating = false;
+            _isListening = false;
           });
           if (_pageController.hasClients) {
             _pageController.jumpToPage(0);
@@ -1028,15 +1059,29 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
     }
   }
 
-  void _startListening() async {
+  void _startListening({bool isAutoRestart = false}) async {
     if (!_speechEnabled) return;
-    setResult(null);
-    setState(() {
-      _lastWords = "";
-      _isListening = true;
-      _startTime = DateTime.now();
-    });
-    await _speechToText.listen(onResult: _onSpeechResult, localeId: 'ja-JP');
+    if (!isAutoRestart) {
+      setResult(null);
+      setState(() {
+        _lastWords = "";
+        _isListening = true;
+        _isHolding = true; // User started holding
+        _startTime = DateTime.now();
+      });
+    } else {
+      // On auto-restart, we just ensure _isListening is true but keep existing transcribed text
+      if (mounted) {
+        setState(() => _isListening = true);
+      }
+    }
+
+    await _speechToText.listen(
+      onResult: _onSpeechResult,
+      localeId: 'ja-JP',
+      listenFor: const Duration(hours: 1), // không giới hạn thực tế
+      pauseFor: const Duration(hours: 1), // không tự dừng khi im lặng
+    );
     _animateBars();
   }
 
@@ -1049,6 +1094,9 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
   }
 
   void _stopListening() async {
+    if (_isHolding) {
+      setState(() => _isHolding = false); // User released the button
+    }
     await _speechToText.stop();
     final durationMs = _startTime != null
         ? DateTime.now().difference(_startTime!).inMilliseconds
@@ -1630,77 +1678,114 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
               ),
               const SizedBox(width: 12),
               // Mic Button (Primary)
+              // FIX 4: Disabled state khi !_speechEnabled
               Expanded(
-                child: GestureDetector(
-                  onLongPressStart: (_) => _startListening(),
-                  onLongPressEnd: (_) => _stopListening(),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF6366f1), Color(0xFFa855f7)],
-                      ),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6366f1).withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (_isListening)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: _audioBars
-                                .map(
-                                  (h) => Container(
-                                    width: 3,
-                                    height: h,
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 1.5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                      borderRadius: BorderRadius.circular(1.5),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
+                child: !_speechEnabled
+                    ? Tooltip(
+                        message:
+                            'Microphone không khả dụng. Kiểm tra quyền truy cập mic.',
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(28),
                           ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _isListening
-                                  ? Icons.stop_rounded
-                                  : Icons.mic_rounded,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            if (!_isListening) ...[
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.mic_off_rounded,
+                                color: Colors.grey[500],
+                                size: 24,
+                              ),
                               const SizedBox(width: 8),
                               Text(
-                                'NHẤN GIỮ',
+                                'MIC KHÔNG KHẢ DỤNG',
                                 style: GoogleFonts.lexend(
-                                  color: Colors.white,
+                                  color: Colors.grey[500],
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
-                          ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
+                      )
+                    : GestureDetector(
+                        onLongPressStart: (_) => _startListening(),
+                        onLongPressEnd: (_) => _stopListening(),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          height: 56,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6366f1), Color(0xFFa855f7)],
+                            ),
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF6366f1,
+                                ).withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              if (_isListening)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: _audioBars
+                                      .map(
+                                        (h) => Container(
+                                          width: 3,
+                                          height: h,
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 1.5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.5,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              1.5,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _isListening
+                                        ? Icons.stop_rounded
+                                        : Icons.mic_rounded,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                  if (!_isListening) ...[
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'NHẤN GIỮ',
+                                      style: GoogleFonts.lexend(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
               ),
             ],
           ),
