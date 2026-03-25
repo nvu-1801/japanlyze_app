@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 
@@ -42,7 +43,7 @@ class LocalNotificationService {
     );
 
     // Request permissions for Android 13+
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       _notificationsPlugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin

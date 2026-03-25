@@ -4,25 +4,25 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Primary Colors (New Modern Blue)
-  static const Color primary = Color(0xFF137FEC);
-  static const Color primaryLight = Color(0xFF4A9FFF);
-  static const Color primaryDark = Color(0xFF0061C7);
+  // Primary Colors (Shoshin Night Blue)
+  static const Color primary = Color(0xFF2962FF);
+  static const Color primaryLight = Color(0xFF5A8BFF);
+  static const Color primaryDark = Color(0xFF0038C7);
 
-  // Secondary Colors
-  static const Color secondary = Color(0xFFF43F5E);
-  static const Color secondaryLight = Color(0xFFFB7185);
-  static const Color secondaryDark = Color(0xFFE11D48);
+  // Secondary Colors (Shoshin Night Dark Blue/Grey)
+  static const Color secondary = Color(0xFF37474F);
+  static const Color secondaryLight = Color(0xFF62727B);
+  static const Color secondaryDark = Color(0xFF102027);
 
   // Neutral Colors (Modern Palette)
-  static const Color background = Color(0xFFF6F7F8);
-  static const Color backgroundDark = Color(0xFF101922);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceDark = Color(0xFF1C2632);
+  static const Color background = Color(0xFF101922);
+  static const Color backgroundDark = Color(0xFF0D141C);
+  static const Color surface = Color(0xFF1C2632);
+  static const Color surfaceDark = Color(0xFF1A1A1A);
 
   // Text Colors
-  static const Color textPrimary = Color(0xFF0F172A); // Slate-900
-  static const Color textSecondary = Color(0xFF64748B); // Slate-500
+  static const Color textPrimary = Color(0xFFF1F5F9);
+  static const Color textSecondary = Color(0xFF94A3B8);
   static const Color textLight = Color(0xFFF1F5F9);
 
   // Status Colors

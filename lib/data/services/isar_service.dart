@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/flashcard_models.dart';
 import '../../domain/entities/test_result.dart';
 import '../../domain/entities/app_notification.dart';
@@ -20,7 +21,11 @@ class IsarService {
   Future<void> initialize() async {
     if (_isar != null) return;
 
-    final dir = await getApplicationDocumentsDirectory();
+    String? dirPath;
+    if (!kIsWeb) {
+      final dir = await getApplicationDocumentsDirectory();
+      dirPath = dir.path;
+    }
 
     _isar = await Isar.open(
       [
@@ -30,7 +35,7 @@ class IsarService {
         TestResultSchema,
         AppNotificationSchema,
       ],
-      directory: dir.path,
+      directory: dirPath ?? '',
       inspector: true, // Enable for debugging
     );
   }

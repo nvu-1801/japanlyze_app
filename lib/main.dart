@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import 'core/theme/app_theme.dart';
@@ -89,8 +90,35 @@ class JapaLyzeApp extends StatelessWidget {
 }
 
 /// Wrapper widget to handle authentication state
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _splashFinished = false;
+  bool _hasCompletedOnboarding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkOnboarding();
+  }
+
+  Future<void> _checkOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _hasCompletedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
+    });
+  }
+
+  void _onSplashFinished() {
+    setState(() {
+      _splashFinished = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,9 +195,7 @@ class AuthWrapper extends StatelessWidget {
                   action: SnackBarAction(
                     label: 'XEM',
                     textColor: Colors.white,
-                    onPressed: () {
-                      // Handled by the notification icon usually, but nice to have
-                    },
+                    onPressed: () {},
                   ),
                 ),
               );
@@ -177,20 +203,17 @@ class AuthWrapper extends StatelessWidget {
           },
         ),
       ],
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          print('AuthWrapper: Current state: $state');
-          if (state is AuthInitial || state is AuthLoading) {
-            return const SplashPage();
-          } else if (state is AuthAuthenticated) {
-            print('AuthWrapper: User authenticated: ${state.user.uuid}');
-            return const HomePage();
-          } else {
-            print('AuthWrapper: User not authenticated');
-            return const LoginPage();
-          }
-        },
-      ),
+      child: !_splashFinished
+          ? SplashPage(onFinished: _onSplashFinished)
+          : BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                if (state is AuthAuthenticated) {
+                  return const HomePage();
+                } else {
+                  return _hasCompletedOnboarding ? const LoginPage() : const OnboardingPage();
+                }
+              },
+            ),
     );
   }
 }
