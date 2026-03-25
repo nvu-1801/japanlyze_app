@@ -9,6 +9,10 @@ import '../../../domain/entities/conversation_models.dart';
 import '../../../domain/entities/flashcard_models.dart';
 import '../../../data/services/user_progress_service.dart';
 import '../settings_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/notification/notification_bloc.dart';
+import '../../blocs/notification/notification_event.dart';
+import '../../../domain/entities/app_notification.dart';
 
 /// SRS Flashcard Page with swipe gestures and 3D flip animation
 class SRSFlashcardPage extends StatefulWidget {
@@ -200,6 +204,20 @@ class _SRSFlashcardPageState extends State<SRSFlashcardPage>
     }
 
     if (!mounted) return;
+
+    // Trigger notification
+    final title = widget.title ?? widget.lesson?.title ?? 'Flashcards';
+    context.read<NotificationBloc>().add(
+      NotificationAddRequested(
+        AppNotification(
+          title: 'Hoàn thành luyện tập',
+          message: 'Bạn đã hoàn thành phiên luyện tập "$title" với $total thẻ.',
+          type: 'roadmap',
+          timestamp: DateTime.now(),
+        ),
+      ),
+    );
+
     Navigator.pop(context, true);
   }
 

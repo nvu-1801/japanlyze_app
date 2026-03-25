@@ -20,6 +20,7 @@ import 'domain/usecases/auth/logout_usecase.dart';
 import 'domain/usecases/auth/update_profile_usecase.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/dashboard/dashboard_bloc.dart';
+import 'presentation/blocs/notification/notification_bloc.dart';
 import 'data/services/user_progress_service.dart';
 import 'data/services/roadmap_sync_service.dart';
 
@@ -112,4 +113,5 @@ Future<void> init() async {
   sl.registerFactory(
     () => DashboardBloc(authBloc: sl(), progressService: sl(), examDs: sl()),
   );
+  sl.registerLazySingleton(() => NotificationBloc());
 }

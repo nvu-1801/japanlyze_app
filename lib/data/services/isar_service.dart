@@ -2,6 +2,7 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../domain/entities/flashcard_models.dart';
 import '../../domain/entities/test_result.dart';
+import '../../domain/entities/app_notification.dart';
 
 /// Service for managing Isar database instance
 class IsarService {
@@ -27,6 +28,7 @@ class IsarService {
         FlashcardDeckSchema,
         UserProgressHistorySchema,
         TestResultSchema,
+        AppNotificationSchema,
       ],
       directory: dir.path,
       inspector: true, // Enable for debugging

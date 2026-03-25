@@ -10,6 +10,9 @@ import '../../../data/datasources/remote/exam_remote_datasource.dart';
 import '../../../domain/entities/test_result.dart';
 import '../../../injection_container.dart';
 import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/notification/notification_bloc.dart';
+import '../../blocs/notification/notification_event.dart';
+import '../../../domain/entities/app_notification.dart';
 
 class ExamDetailPage extends StatefulWidget {
   final String examId;
@@ -192,6 +195,20 @@ class _ExamDetailPageState extends State<ExamDetailPage> {
 
     if (mounted) {
       setState(() => _isFinished = true);
+
+      // Trigger notification
+      final percentage = (score / total * 100).toInt();
+      context.read<NotificationBloc>().add(
+        NotificationAddRequested(
+          AppNotification(
+            title: 'Hoàn thành bài thi',
+            message:
+                'Bạn đã hoàn thành bài thi "${widget.title}" với kết quả $score/$total ($percentage%).',
+            type: 'exam',
+            timestamp: DateTime.now(),
+          ),
+        ),
+      );
     }
   }
 

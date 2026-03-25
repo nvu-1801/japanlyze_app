@@ -27,6 +27,9 @@ import '../../../../injection_container.dart';
 import '../../../../domain/entities/exam.dart';
 import '../reading_page.dart';
 import '../../exam/exam_detail_page.dart';
+import '../notifications_page.dart';
+import 'package:japalyze/presentation/blocs/notification/notification_bloc.dart';
+import 'package:japalyze/presentation/blocs/notification/notification_state.dart';
 import 'dart:math' as math;
 
 /// Dashboard tab with modern design using Bloc pattern
@@ -377,41 +380,60 @@ class _DashboardTabState extends State<DashboardTab>
                       onTap: () => showQuickSearch(context),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.1)
-                              : Colors.black.withValues(alpha: 0.05),
-                        ),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Icon(
-                            Icons.notifications_outlined,
-                            color: isDark ? Colors.white54 : Colors.grey[400],
-                            size: 20,
+                    BlocBuilder<NotificationBloc, NotificationState>(
+                      builder: (context, notificationState) {
+                        int unreadCount = 0;
+                        if (notificationState is NotificationLoaded) {
+                          unreadCount = notificationState.unreadCount;
+                        }
+
+                        return GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const NotificationsPage(),
+                            ),
                           ),
-                          if (state.currentStreak > 0)
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.black.withValues(alpha: 0.05),
                               ),
                             ),
-                        ],
-                      ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Icon(
+                                  Icons.notifications_outlined,
+                                  color: isDark
+                                      ? Colors.white54
+                                      : Colors.grey[400],
+                                  size: 20,
+                                ),
+                                if (unreadCount > 0)
+                                  Positioned(
+                                    top: 10,
+                                    right: 10,
+                                    child: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),

@@ -57,48 +57,53 @@ const UserSchema = CollectionSchema(
       name: r'isPremium',
       type: IsarType.bool,
     ),
-    r'level': PropertySchema(
+    r'lastActiveAt': PropertySchema(
       id: 8,
+      name: r'lastActiveAt',
+      type: IsarType.dateTime,
+    ),
+    r'level': PropertySchema(
+      id: 9,
       name: r'level',
       type: IsarType.long,
     ),
     r'name': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'name',
       type: IsarType.string,
     ),
     r'onboardingCompleted': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'onboardingCompleted',
       type: IsarType.bool,
     ),
     r'premiumUntil': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'premiumUntil',
       type: IsarType.dateTime,
     ),
     r'provider': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'provider',
       type: IsarType.string,
     ),
     r'role': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'role',
       type: IsarType.string,
     ),
     r'streakCount': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'streakCount',
       type: IsarType.long,
     ),
     r'updatedAt': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'uuid': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'uuid',
       type: IsarType.string,
     )
@@ -157,15 +162,16 @@ void _userSerialize(
   writer.writeString(offsets[5], object.email);
   writer.writeLong(offsets[6], object.exp);
   writer.writeBool(offsets[7], object.isPremium);
-  writer.writeLong(offsets[8], object.level);
-  writer.writeString(offsets[9], object.name);
-  writer.writeBool(offsets[10], object.onboardingCompleted);
-  writer.writeDateTime(offsets[11], object.premiumUntil);
-  writer.writeString(offsets[12], object.provider);
-  writer.writeString(offsets[13], object.role);
-  writer.writeLong(offsets[14], object.streakCount);
-  writer.writeDateTime(offsets[15], object.updatedAt);
-  writer.writeString(offsets[16], object.uuid);
+  writer.writeDateTime(offsets[8], object.lastActiveAt);
+  writer.writeLong(offsets[9], object.level);
+  writer.writeString(offsets[10], object.name);
+  writer.writeBool(offsets[11], object.onboardingCompleted);
+  writer.writeDateTime(offsets[12], object.premiumUntil);
+  writer.writeString(offsets[13], object.provider);
+  writer.writeString(offsets[14], object.role);
+  writer.writeLong(offsets[15], object.streakCount);
+  writer.writeDateTime(offsets[16], object.updatedAt);
+  writer.writeString(offsets[17], object.uuid);
 }
 
 User _userDeserialize(
@@ -184,15 +190,16 @@ User _userDeserialize(
     exp: reader.readLongOrNull(offsets[6]) ?? 0,
     id: id,
     isPremium: reader.readBoolOrNull(offsets[7]) ?? false,
-    level: reader.readLongOrNull(offsets[8]) ?? 1,
-    name: reader.readString(offsets[9]),
-    onboardingCompleted: reader.readBoolOrNull(offsets[10]) ?? false,
-    premiumUntil: reader.readDateTimeOrNull(offsets[11]),
-    provider: reader.readStringOrNull(offsets[12]) ?? 'email',
-    role: reader.readStringOrNull(offsets[13]) ?? 'user',
-    streakCount: reader.readLongOrNull(offsets[14]) ?? 0,
-    updatedAt: reader.readDateTimeOrNull(offsets[15]),
-    uuid: reader.readString(offsets[16]),
+    lastActiveAt: reader.readDateTimeOrNull(offsets[8]),
+    level: reader.readLongOrNull(offsets[9]) ?? 1,
+    name: reader.readString(offsets[10]),
+    onboardingCompleted: reader.readBoolOrNull(offsets[11]) ?? false,
+    premiumUntil: reader.readDateTimeOrNull(offsets[12]),
+    provider: reader.readStringOrNull(offsets[13]) ?? 'email',
+    role: reader.readStringOrNull(offsets[14]) ?? 'user',
+    streakCount: reader.readLongOrNull(offsets[15]) ?? 0,
+    updatedAt: reader.readDateTimeOrNull(offsets[16]),
+    uuid: reader.readString(offsets[17]),
   );
   return object;
 }
@@ -221,22 +228,24 @@ P _userDeserializeProp<P>(
     case 7:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 8:
-      return (reader.readLongOrNull(offset) ?? 1) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongOrNull(offset) ?? 1) as P;
     case 10:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 12:
-      return (reader.readStringOrNull(offset) ?? 'email') as P;
-    case 13:
-      return (reader.readStringOrNull(offset) ?? 'user') as P;
-    case 14:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
-    case 15:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 13:
+      return (reader.readStringOrNull(offset) ?? 'email') as P;
+    case 14:
+      return (reader.readStringOrNull(offset) ?? 'user') as P;
+    case 15:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 16:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 17:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1019,6 +1028,75 @@ extension UserQueryFilter on QueryBuilder<User, User, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isPremium',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> lastActiveAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastActiveAt',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> lastActiveAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastActiveAt',
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> lastActiveAtEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastActiveAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> lastActiveAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastActiveAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> lastActiveAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastActiveAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<User, User, QAfterFilterCondition> lastActiveAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastActiveAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -1891,6 +1969,18 @@ extension UserQuerySortBy on QueryBuilder<User, User, QSortBy> {
     });
   }
 
+  QueryBuilder<User, User, QAfterSortBy> sortByLastActiveAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastActiveAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> sortByLastActiveAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastActiveAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<User, User, QAfterSortBy> sortByLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'level', Sort.asc);
@@ -2109,6 +2199,18 @@ extension UserQuerySortThenBy on QueryBuilder<User, User, QSortThenBy> {
     });
   }
 
+  QueryBuilder<User, User, QAfterSortBy> thenByLastActiveAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastActiveAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<User, User, QAfterSortBy> thenByLastActiveAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastActiveAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<User, User, QAfterSortBy> thenByLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'level', Sort.asc);
@@ -2270,6 +2372,12 @@ extension UserQueryWhereDistinct on QueryBuilder<User, User, QDistinct> {
     });
   }
 
+  QueryBuilder<User, User, QDistinct> distinctByLastActiveAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastActiveAt');
+    });
+  }
+
   QueryBuilder<User, User, QDistinct> distinctByLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'level');
@@ -2381,6 +2489,12 @@ extension UserQueryProperty on QueryBuilder<User, User, QQueryProperty> {
   QueryBuilder<User, bool, QQueryOperations> isPremiumProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isPremium');
+    });
+  }
+
+  QueryBuilder<User, DateTime?, QQueryOperations> lastActiveAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastActiveAt');
     });
   }
 

@@ -34,21 +34,31 @@ class _QuestCardState extends State<QuestCard> {
   @override
   Widget build(BuildContext context) {
     final isDone = widget.completedQuestIds.contains(widget.quest.id);
-    final isLocked = RoadmapUtils.isQuestLocked(widget.quest, widget.completedQuestIds, widget.weeks);
+    final isLocked = RoadmapUtils.isQuestLocked(
+      widget.quest,
+      widget.completedQuestIds,
+      widget.weeks,
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final primaryColor = isDark ? AppColors.primaryLight : AppColors.primaryDark;
-    final primaryFixedColor = isDark ? AppColors.primaryDark : AppColors.primaryLight;
-    
+    final primaryColor = isDark
+        ? AppColors.primaryLight
+        : AppColors.primaryDark;
+    final primaryFixedColor = isDark
+        ? AppColors.primaryDark
+        : AppColors.primaryLight;
+
     Color bgColor = isDark ? Colors.grey[850]! : Colors.white;
     Color borderColor = primaryColor.withValues(alpha: 0.2);
     Color iconBgColor = primaryFixedColor;
     Color iconColor = isDark ? Colors.white : primaryColor;
     Color titleColor = isDark ? Colors.white : AppColors.textPrimary;
     Color subtitleColor = isDark ? Colors.grey[400]! : AppColors.textSecondary;
-    
+
     if (isLocked) {
-      bgColor = isDark ? Colors.grey[900]! : AppColors.background.withValues(alpha: 0.5);
+      bgColor = isDark
+          ? Colors.grey[900]!
+          : AppColors.background.withValues(alpha: 0.5);
       borderColor = Colors.transparent;
       iconBgColor = isDark ? Colors.grey[800]! : const Color(0xFFE1E3E1);
       iconColor = isDark ? Colors.grey[500]! : AppColors.textSecondary;
@@ -56,11 +66,19 @@ class _QuestCardState extends State<QuestCard> {
       subtitleColor = titleColor.withValues(alpha: 0.6);
     } else if (isDone) {
       bgColor = isDark ? Colors.grey[850]! : AppColors.background;
-      borderColor = isDark ? Colors.grey[800]! : AppColors.primary.withValues(alpha: 0.5);
-      iconBgColor = isDark ? AppColors.primaryDark.withValues(alpha: 0.3) : AppColors.primaryLight.withValues(alpha: 0.1);
+      borderColor = isDark
+          ? Colors.grey[800]!
+          : AppColors.primary.withValues(alpha: 0.5);
+      iconBgColor = isDark
+          ? AppColors.primaryDark.withValues(alpha: 0.3)
+          : AppColors.primaryLight.withValues(alpha: 0.1);
       iconColor = isDark ? AppColors.primaryLight : AppColors.primaryDark;
-      titleColor = isDark ? Colors.grey[300]! : AppColors.textPrimary.withValues(alpha: 0.8);
-      subtitleColor = isDark ? Colors.grey[500]! : AppColors.textSecondary.withValues(alpha: 0.8);
+      titleColor = isDark
+          ? Colors.grey[300]!
+          : AppColors.textPrimary.withValues(alpha: 0.8);
+      subtitleColor = isDark
+          ? Colors.grey[500]!
+          : AppColors.textSecondary.withValues(alpha: 0.8);
     }
 
     return GestureDetector(
@@ -77,18 +95,18 @@ class _QuestCardState extends State<QuestCard> {
         scale: _isPressed ? 0.98 : 1.0,
         duration: const Duration(milliseconds: 100),
         child: Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(24),
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: borderColor, width: 1),
             boxShadow: (!isLocked && !isDone)
                 ? [
                     BoxShadow(
                       color: AppColors.textPrimary.withValues(alpha: 0.04),
-                      blurRadius: 32,
-                      offset: const Offset(0, 8),
+                      blurRadius: 24,
+                      offset: const Offset(0, 4),
                     ),
                   ]
                 : [],
@@ -100,8 +118,8 @@ class _QuestCardState extends State<QuestCard> {
                 child: Row(
                   children: [
                     Container(
-                      width: 56,
-                      height: 56,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         color: iconBgColor,
                         shape: BoxShape.circle,
@@ -110,11 +128,11 @@ class _QuestCardState extends State<QuestCard> {
                         child: Icon(
                           widget.quest.icon,
                           color: iconColor,
-                          size: 28,
+                          size: 22,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,31 +141,33 @@ class _QuestCardState extends State<QuestCard> {
                             widget.quest.title,
                             style: GoogleFonts.plusJakartaSans(
                               fontWeight: FontWeight.w800,
-                              fontSize: 18,
+                              fontSize: 15,
                               color: titleColor,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Text(
                             _getSubtitleForQuest(widget.quest),
                             style: GoogleFonts.manrope(
-                              fontSize: 14,
+                              fontSize: 12,
                               color: subtitleColor,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (!isLocked && !isDone && widget.progress > 0) ...[
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             ClipRRect(
-                              borderRadius: BorderRadius.circular(3),
+                              borderRadius: BorderRadius.circular(2),
                               child: LinearProgressIndicator(
                                 value: widget.progress,
                                 backgroundColor: isDark
                                     ? Colors.grey[800]
                                     : Colors.grey[200],
-                                valueColor: AlwaysStoppedAnimation(primaryColor),
-                                minHeight: 4,
+                                valueColor: AlwaysStoppedAnimation(
+                                  primaryColor,
+                                ),
+                                minHeight: 3,
                               ),
                             ),
                           ],
@@ -157,19 +177,17 @@ class _QuestCardState extends State<QuestCard> {
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               if (isLocked)
                 Icon(
                   Icons.lock_rounded,
-                  color: isDark ? Colors.grey[700] : AppColors.textSecondary.withValues(alpha: 0.4),
-                  size: 24,
+                  color: isDark
+                      ? Colors.grey[700]
+                      : AppColors.textSecondary.withValues(alpha: 0.4),
+                  size: 20,
                 )
               else if (isDone)
-                Icon(
-                  Icons.check_circle_rounded,
-                  color: iconColor,
-                  size: 28,
-                )
+                Icon(Icons.check_circle_rounded, color: iconColor, size: 24)
               else
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -178,16 +196,16 @@ class _QuestCardState extends State<QuestCard> {
                       'BẮT ĐẦU',
                       style: GoogleFonts.manrope(
                         fontWeight: FontWeight.w800,
-                        fontSize: 12,
+                        fontSize: 11,
                         color: primaryColor,
                         letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 2),
                     Icon(
                       Icons.chevron_right_rounded,
                       color: primaryColor,
-                      size: 24,
+                      size: 20,
                     ),
                   ],
                 ),

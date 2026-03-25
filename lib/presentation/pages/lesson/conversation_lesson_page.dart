@@ -3,6 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../domain/entities/conversation_models.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../data/services/user_progress_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/notification/notification_bloc.dart';
+import '../../blocs/notification/notification_event.dart';
+import '../../../../domain/entities/app_notification.dart';
 
 class ConversationLessonPage extends StatefulWidget {
   final ConversationLesson lesson;
@@ -81,6 +85,17 @@ class _ConversationLessonPageState extends State<ConversationLessonPage> {
       await UserProgressService().updateQuestProgress(widget.questId!, 1.0);
     }
     if (context.mounted) {
+      // Trigger notification
+      context.read<NotificationBloc>().add(
+        NotificationAddRequested(
+          AppNotification(
+            title: 'Hoàn thành mốc lộ trình',
+            message: 'Bạn đã hoàn thành bài học "${widget.lesson.title}".',
+            type: 'roadmap',
+            timestamp: DateTime.now(),
+          ),
+        ),
+      );
       Navigator.pop(context, true);
     }
   }

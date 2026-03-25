@@ -1379,10 +1379,14 @@ class _ReadingDetailPageState extends State<ReadingDetailPage> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.05),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.05,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                 ),
                               ),
                               child: Text(

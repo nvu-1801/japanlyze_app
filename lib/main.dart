@@ -6,9 +6,14 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import 'core/theme/app_theme.dart';
 import 'data/services/isar_service.dart';
+import 'data/services/local_notification_service.dart';
 import 'injection_container.dart' as di;
 import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/theme/theme_bloc.dart';
+import 'presentation/blocs/notification/notification_bloc.dart';
+import 'presentation/blocs/notification/notification_event.dart';
+import 'presentation/blocs/notification/notification_state.dart';
+import 'core/constants/app_colors.dart';
 import 'presentation/pages/login_page.dart';
 import 'presentation/pages/register_page.dart';
 import 'presentation/pages/home_page.dart';
@@ -40,6 +45,9 @@ void main() async {
   // Initialize Isar database for offline-first architecture
   await IsarService.instance.initialize();
 
+  // Initialize Local Notifications
+  await LocalNotificationService.instance.initialize();
+
   runApp(const JapaLyzeApp());
 }
 
@@ -54,6 +62,10 @@ class JapaLyzeApp extends StatelessWidget {
           create: (_) => di.sl<AuthBloc>()..add(GetCurrentUserEvent()),
         ),
         BlocProvider(create: (_) => ThemeBloc()..add(LoadThemeEvent())),
+        BlocProvider(
+          create: (_) =>
+              di.sl<NotificationBloc>()..add(NotificationLoadRequested()),
+        ),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) => MaterialApp(
@@ -82,30 +94,103 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      },
-      builder: (context, state) {
-        print('AuthWrapper: Current state: $state');
-        if (state is AuthInitial || state is AuthLoading) {
-          return const SplashPage();
-        } else if (state is AuthAuthenticated) {
-          print('AuthWrapper: User authenticated: ${state.user.uuid}');
-          return const HomePage();
-        } else {
-          print('AuthWrapper: User not authenticated');
-          return const LoginPage();
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+        ),
+        BlocListener<NotificationBloc, NotificationState>(
+          listener: (context, state) {
+            if (state is NotificationCreated) {
+              // Trigger vibration
+              HapticFeedback.heavyImpact();
+
+              // Show in-app banner
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(
+                        state.notification.type == 'exam'
+                            ? Icons.assignment_rounded
+                            : Icons.auto_awesome_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              state.notification.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              state.notification.message,
+                              style: const TextStyle(fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  backgroundColor: AppColors.primary,
+                  behavior: SnackBarBehavior.floating,
+                  margin: const EdgeInsets.fromLTRB(
+                    16,
+                    0,
+                    16,
+                    80,
+                  ), // Position above bottom nav
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  duration: const Duration(seconds: 4),
+                  action: SnackBarAction(
+                    label: 'XEM',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      // Handled by the notification icon usually, but nice to have
+                    },
+                  ),
+                ),
+              );
+            }
+          },
+        ),
+      ],
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          print('AuthWrapper: Current state: $state');
+          if (state is AuthInitial || state is AuthLoading) {
+            return const SplashPage();
+          } else if (state is AuthAuthenticated) {
+            print('AuthWrapper: User authenticated: ${state.user.uuid}');
+            return const HomePage();
+          } else {
+            print('AuthWrapper: User not authenticated');
+            return const LoginPage();
+          }
+        },
+      ),
     );
   }
 }

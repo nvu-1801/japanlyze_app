@@ -35,7 +35,11 @@ class SteppingStonesRoadmap extends StatelessWidget {
         children: List.generate(quests.length, (index) {
           final quest = quests[index];
           final isDone = completedQuestIds.contains(quest.id);
-          final isLocked = RoadmapUtils.isQuestLocked(quest, completedQuestIds, weeks);
+          final isLocked = RoadmapUtils.isQuestLocked(
+            quest,
+            completedQuestIds,
+            weeks,
+          );
           final isAvailable = !isLocked && !isDone;
           final progress = questProgress[quest.id] ?? 0.0;
           final isLast = index == quests.length - 1;
@@ -75,7 +79,14 @@ class SteppingStonesRoadmap extends StatelessWidget {
         child: Row(
           children: [
             // Node circle
-            _buildNodeCircle(quest, isDone, isLocked, isAvailable, progress, isDark),
+            _buildNodeCircle(
+              quest,
+              isDone,
+              isLocked,
+              isAvailable,
+              progress,
+              isDark,
+            ),
             const SizedBox(width: 16),
             // Quest info
             Expanded(
@@ -103,7 +114,6 @@ class SteppingStonesRoadmap extends StatelessWidget {
     double progress,
     bool isDark,
   ) {
-    double size = 56.0;
     Color backgroundColor;
     Color borderColor;
     Widget? child;
@@ -111,18 +121,14 @@ class SteppingStonesRoadmap extends StatelessWidget {
     if (isDone) {
       backgroundColor = AppColors.primary.withValues(alpha: 0.1);
       borderColor = AppColors.primary;
-      child = Icon(
-        Icons.check_rounded,
-        color: AppColors.primary,
-        size: 28,
-      );
+      child = Icon(Icons.check_rounded, color: AppColors.primary, size: 20);
     } else if (isLocked) {
       backgroundColor = isDark ? Colors.grey[900]! : Colors.grey[100]!;
       borderColor = isDark ? Colors.grey[800]! : Colors.grey[200]!;
       child = Icon(
         Icons.lock_rounded,
         color: isDark ? Colors.grey[700]! : Colors.grey[400]!,
-        size: 24,
+        size: 18,
       );
     } else {
       backgroundColor = primaryColor.withValues(alpha: 0.1);
@@ -131,36 +137,29 @@ class SteppingStonesRoadmap extends StatelessWidget {
         child = Text(
           '${(progress * 100).toInt()}%',
           style: GoogleFonts.lexend(
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: FontWeight.bold,
             color: iconColor,
           ),
         );
       } else {
-        child = Icon(
-          quest.icon,
-          color: iconColor,
-          size: 24,
-        );
+        child = Icon(quest.icon, color: iconColor, size: 18);
       }
     }
 
     return Container(
-      width: size,
-      height: size,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
         color: backgroundColor,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: borderColor,
-          width: 3,
-        ),
+        border: Border.all(color: borderColor, width: 2),
         boxShadow: isAvailable
             ? [
                 BoxShadow(
                   color: iconColor.withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ]
             : null,
@@ -179,12 +178,12 @@ class SteppingStonesRoadmap extends StatelessWidget {
     bool isDark,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: isLocked
             ? (isDark ? Colors.grey[900]! : Colors.grey[50]!)
             : Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDone
               ? AppColors.primary.withValues(alpha: 0.3)
@@ -195,8 +194,8 @@ class SteppingStonesRoadmap extends StatelessWidget {
             ? [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ]
             : null,
@@ -207,32 +206,32 @@ class SteppingStonesRoadmap extends StatelessWidget {
           Text(
             quest.title,
             style: GoogleFonts.lexend(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: isLocked
                   ? (isDark ? Colors.grey[600]! : Colors.grey[400]!)
                   : (isDark ? Colors.white : Colors.grey[800]!),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             quest.description,
             style: GoogleFonts.lexend(
-              fontSize: 13,
+              fontSize: 11,
               color: isLocked
                   ? (isDark ? Colors.grey[700]! : Colors.grey[400]!)
                   : Colors.grey[600],
             ),
           ),
           if (!isLocked && progress > 0) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(2),
               child: LinearProgressIndicator(
                 value: progress,
                 backgroundColor: isDark ? Colors.grey[800] : Colors.grey[100],
                 valueColor: AlwaysStoppedAnimation(iconColor),
-                minHeight: 6,
+                minHeight: 4,
               ),
             ),
           ],
@@ -243,16 +242,16 @@ class SteppingStonesRoadmap extends StatelessWidget {
 
   Widget _buildConnector(bool isDone, bool isLocked, bool isDark) {
     return Container(
-      margin: const EdgeInsets.only(left: 28, top: 4, bottom: 4),
-      height: 24,
-      width: 3,
+      margin: const EdgeInsets.only(left: 21, top: 4, bottom: 4),
+      height: 16,
+      width: 2,
       decoration: BoxDecoration(
         color: isDone
             ? AppColors.primary
             : (isLocked
-                ? (isDark ? Colors.grey[800]! : Colors.grey[200]!)
-                : iconColor.withValues(alpha: 0.3)),
-        borderRadius: BorderRadius.circular(2),
+                  ? (isDark ? Colors.grey[800]! : Colors.grey[200]!)
+                  : iconColor.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(1),
       ),
     );
   }
