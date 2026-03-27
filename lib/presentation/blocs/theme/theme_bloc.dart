@@ -25,7 +25,7 @@ class ThemeState {
 class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
   static const _key = 'dark_mode';
 
-  ThemeBloc() : super(const ThemeState(ThemeMode.system)) {
+  ThemeBloc() : super(const ThemeState(ThemeMode.dark)) {
     on<LoadThemeEvent>(_onLoad);
     on<ToggleThemeEvent>(_onToggle);
   }
@@ -34,7 +34,7 @@ class ThemeBloc extends Bloc<ThemeEvent, ThemeState> {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getBool(_key);
     if (saved == null) {
-      emit(const ThemeState(ThemeMode.system));
+      emit(const ThemeState(ThemeMode.dark));
     } else {
       emit(ThemeState(saved ? ThemeMode.dark : ThemeMode.light));
     }

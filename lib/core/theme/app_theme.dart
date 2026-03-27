@@ -17,16 +17,23 @@ class AppTheme {
         secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.error,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: AppColors.textPrimary,
       ),
     );
 
     return baseTheme.copyWith(
-      textTheme: GoogleFonts.lexendTextTheme(baseTheme.textTheme),
+      textTheme: GoogleFonts.lexendTextTheme(baseTheme.textTheme).apply(
+        bodyColor: AppColors.textPrimary,
+        displayColor: AppColors.textPrimary,
+      ),
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
+        surfaceTintColor: Colors.transparent,
         titleTextStyle: GoogleFonts.lexend(
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -77,6 +84,37 @@ class AppTheme {
           side: BorderSide(color: Colors.grey.shade100),
         ),
       ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textSecondary,
+        elevation: 0,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white,
+        indicatorColor: AppColors.primary.withValues(alpha: 0.1),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return GoogleFonts.lexend(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            );
+          }
+          return GoogleFonts.lexend(
+            fontSize: 11,
+            color: AppColors.textSecondary,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: AppColors.primary);
+          }
+          return const IconThemeData(color: AppColors.textSecondary);
+        }),
+      ),
+      dividerColor: Colors.grey.shade100,
+      iconTheme: const IconThemeData(color: AppColors.textPrimary),
     );
   }
 
@@ -91,16 +129,22 @@ class AppTheme {
         secondary: AppColors.secondary,
         surface: AppColors.surfaceDark,
         error: AppColors.error,
+        onPrimary: Colors.white,
+        onSurface: AppColors.textPrimaryDark,
       ),
     );
 
     return baseTheme.copyWith(
-      textTheme: GoogleFonts.lexendTextTheme(baseTheme.textTheme),
+      textTheme: GoogleFonts.lexendTextTheme(baseTheme.textTheme).apply(
+        bodyColor: AppColors.textPrimaryDark,
+        displayColor: AppColors.textPrimaryDark,
+      ),
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
         backgroundColor: AppColors.backgroundDark,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimaryDark,
+        surfaceTintColor: Colors.transparent,
         titleTextStyle: GoogleFonts.lexend(
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -146,6 +190,13 @@ class AppTheme {
           side: BorderSide(color: Colors.grey.shade800),
         ),
       ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: AppColors.surfaceDark,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textSecondaryDark,
+        elevation: 0,
+      ),
+      iconTheme: const IconThemeData(color: AppColors.textPrimaryDark),
     );
   }
 }

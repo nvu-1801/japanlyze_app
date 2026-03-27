@@ -92,7 +92,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundDark,
       body: Stack(
         children: [
           // Background ambient elements
@@ -104,7 +104,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.15),
+                color: AppColors.primary.withValues(alpha: 0.15),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
@@ -136,10 +136,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
                   decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.8),
+                    color: AppColors.backgroundDark.withValues(alpha: 0.8),
                     border: Border(
                       top: BorderSide(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         width: 1,
                       ),
                     ),
@@ -199,7 +199,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               ),
                             ),
                             Text(
-                              'Bước ${_currentPage} / 2',
+                              'Bước $_currentPage / 2',
                               style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontWeight: FontWeight.bold,
@@ -237,7 +237,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.4),
+                          color: AppColors.primary.withValues(alpha: 0.4),
                           blurRadius: 60,
                           spreadRadius: 20,
                         ),
@@ -250,7 +250,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   style: TextStyle(
                     fontSize: 140,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     height: 1.0,
                   ),
                 ),
@@ -263,7 +263,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             style: TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: Colors.white,
               height: 1.2,
             ),
           ),
@@ -294,7 +294,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Colors.white,
               height: 1.3,
             ),
           ),
@@ -333,7 +333,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Colors.white,
               height: 1.3,
             ),
           ),
@@ -377,10 +377,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.secondary.withOpacity(0.4),
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
+            color: isSelected ? AppColors.primary : Colors.white.withValues(alpha: 0.1),
             width: 2,
           ),
         ),
@@ -397,7 +397,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.6),
+                          color: AppColors.primary.withValues(alpha: 0.6),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -425,15 +425,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     desc,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondaryDark,
                     ),
                   ),
                 ],

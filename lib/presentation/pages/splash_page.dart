@@ -63,7 +63,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundDark,
       body: Center(
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 800),
@@ -107,7 +107,7 @@ class _SplashPageState extends State<SplashPage> {
           style: const TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: Colors.white,
             letterSpacing: 2,
           ),
         ),
